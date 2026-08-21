@@ -1,0 +1,30 @@
+# Environment
+.env
+mobile/.env
+backend/.env
+
+# Node
+node_modules/
+mobile/node_modules/
+mobile/.expo/
+
+# Python
+__pycache__/
+*.py[cod]
+backend/.venv/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# AI
+backend/models/
+ai/models/
+*.pt
+*.pth
+*.onnx
