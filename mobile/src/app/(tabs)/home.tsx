@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -15,7 +14,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 
-export default function DiaryScreen() {
+export default function HomeScreen() {
   const theme = useTheme();
 
   const [summary, setSummary] =
@@ -33,7 +32,7 @@ export default function DiaryScreen() {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'No fue posible cargar el diario.',
+          : 'No fue posible cargar el resumen.',
       );
     }
   };
@@ -92,19 +91,41 @@ export default function DiaryScreen() {
     );
   }
 
+  const macros = [
+    {
+      label: 'Proteínas',
+      consumed: summary.consumedMacros.protein,
+      goal: summary.goal.protein,
+    },
+    {
+      label: 'Carbohidratos',
+      consumed: summary.consumedMacros.carbs,
+      goal: summary.goal.carbs,
+    },
+    {
+      label: 'Grasas',
+      consumed: summary.consumedMacros.fat,
+      goal: summary.goal.fat,
+    },
+  ];
+
   return (
-    <ScrollView
+    <ThemedView
       style={{
         flex: 1,
-        backgroundColor: theme.background,
-      }}
-      contentContainerStyle={{
         padding: Spacing.four,
-        paddingBottom: Spacing.six,
       }}
     >
       <ThemedText type="title">
-        Diario nutricional
+        Buenos días
+      </ThemedText>
+
+      <ThemedText
+        themeColor="accent"
+        type="small"
+        style={{ marginTop: Spacing.one }}
+      >
+        Tu progreso de hoy
       </ThemedText>
 
       <ThemedView
@@ -115,9 +136,7 @@ export default function DiaryScreen() {
           marginTop: Spacing.four,
         }}
       >
-        <ThemedText>
-          Resumen del día — {summary.date}
-        </ThemedText>
+        <ThemedText>Resumen diario</ThemedText>
 
         <ThemedText
           type="title"
@@ -133,93 +152,22 @@ export default function DiaryScreen() {
             marginTop: Spacing.three,
           }}
         >
-          <View>
-            <ThemedText themeColor="accent" type="small">
-              Proteínas
-            </ThemedText>
-            <ThemedText type="small">
-              {summary.consumedMacros.protein} / {summary.goal.protein} g
-            </ThemedText>
-          </View>
-
-          <View>
-            <ThemedText themeColor="accent" type="small">
-              Carbohidratos
-            </ThemedText>
-            <ThemedText type="small">
-              {summary.consumedMacros.carbs} / {summary.goal.carbs} g
-            </ThemedText>
-          </View>
-
-          <View>
-            <ThemedText themeColor="accent" type="small">
-              Grasas
-            </ThemedText>
-            <ThemedText type="small">
-              {summary.consumedMacros.fat} / {summary.goal.fat} g
-            </ThemedText>
-          </View>
-        </View>
-      </ThemedView>
-
-      <ThemedText
-        type="smallBold"
-        style={{ marginTop: Spacing.four }}
-      >
-        Comidas registradas
-      </ThemedText>
-
-      {summary.meals.length === 0 ? (
-        <ThemedView
-          type="backgroundElement"
-          style={{
-            borderRadius: Spacing.three,
-            padding: Spacing.four,
-            marginTop: Spacing.two,
-          }}
-        >
-          <ThemedText
-            themeColor="textSecondary"
-            style={{ textAlign: 'center' }}
-          >
-            Todavía no has registrado comidas hoy.
-          </ThemedText>
-        </ThemedView>
-      ) : (
-        summary.meals.map((meal) => (
-          <ThemedView
-            key={meal.id}
-            type="backgroundElement"
-            style={{
-              borderRadius: Spacing.three,
-              padding: Spacing.three,
-              marginTop: Spacing.two,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}
-          >
-            <View>
+          {macros.map((macro) => (
+            <View key={macro.label}>
               <ThemedText
-                type="smallBold"
-                style={{ textTransform: 'capitalize' }}
+                themeColor="accent"
+                type="small"
               >
-                {meal.type}
+                {macro.label}
               </ThemedText>
 
-              <ThemedText
-                type="small"
-                themeColor="textSecondary"
-              >
-                {meal.time} · {meal.description}
+              <ThemedText type="small">
+                {macro.consumed} / {macro.goal} g
               </ThemedText>
             </View>
-
-            <ThemedText type="smallBold">
-              {meal.calories} kcal
-            </ThemedText>
-          </ThemedView>
-        ))
-      )}
+          ))}
+        </View>
+      </ThemedView>
 
       <TouchableOpacity
         onPress={() => router.push('/camera')}
@@ -237,9 +185,9 @@ export default function DiaryScreen() {
             color: '#000',
           }}
         >
-          + Registrar comida
+          📷 Fotografiar comida
         </ThemedText>
       </TouchableOpacity>
-    </ScrollView>
+    </ThemedView>
   );
 }
