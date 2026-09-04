@@ -120,7 +120,7 @@ export default function ProfileSetupScreen() {
         calculationSex,
       });
 
-      router.push('/onboarding/goal-selection');
+      router.replace('/onboarding/goal-selection');
     } catch (error) {
       Alert.alert(
         'No fue posible guardar el perfil',

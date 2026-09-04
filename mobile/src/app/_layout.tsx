@@ -19,6 +19,8 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="camera" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="manual-search" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="barcode-scan" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
   );

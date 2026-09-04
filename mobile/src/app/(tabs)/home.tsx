@@ -169,13 +169,20 @@ export default function HomeScreen() {
         </View>
       </ThemedView>
 
+      <ThemedText
+        type="smallBold"
+        style={{ marginTop: Spacing.four }}
+      >
+        Registrar comida
+      </ThemedText>
+
       <TouchableOpacity
         onPress={() => router.push('/camera')}
         style={{
           backgroundColor: theme.accent,
           padding: Spacing.four,
           borderRadius: Spacing.three,
-          marginTop: Spacing.four,
+          marginTop: Spacing.two,
         }}
       >
         <ThemedText
@@ -188,6 +195,44 @@ export default function HomeScreen() {
           📷 Fotografiar comida
         </ThemedText>
       </TouchableOpacity>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: Spacing.two,
+          marginTop: Spacing.two,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.push('/barcode-scan')}
+          style={{
+            flex: 1,
+            borderWidth: 1,
+            borderColor: theme.border,
+            padding: Spacing.three,
+            borderRadius: Spacing.three,
+          }}
+        >
+          <ThemedText style={{ textAlign: 'center' }}>
+            ▤ Código de barras
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push('/manual-search')}
+          style={{
+            flex: 1,
+            borderWidth: 1,
+            borderColor: theme.border,
+            padding: Spacing.three,
+            borderRadius: Spacing.three,
+          }}
+        >
+          <ThemedText style={{ textAlign: 'center' }}>
+            🔍 Búsqueda manual
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
     </ThemedView>
   );
 }

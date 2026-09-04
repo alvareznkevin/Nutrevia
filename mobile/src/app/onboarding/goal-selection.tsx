@@ -54,7 +54,7 @@ export default function GoalSelectionScreen() {
 
     try {
       await api.saveNutritionGoal(selected);
-      router.push('/onboarding/daily-goal-result');
+      router.replace('/onboarding/daily-goal-result');
     } catch (error) {
       Alert.alert(
         'No fue posible calcular el objetivo',

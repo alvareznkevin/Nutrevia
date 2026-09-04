@@ -16,4 +16,4 @@ export async function getWeightHistory(): Promise<WeightEntry[]> {
 export async function getUserProfile(): Promise<UserProfile> {
   await delay(400);
   return mockUserProfile;
-}
+} 
