@@ -11,6 +11,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 
 export default function RegisterScreen() {
@@ -122,31 +123,12 @@ export default function RegisterScreen() {
         </ThemedText>
       )}
 
-      <TouchableOpacity
-        onPress={handleRegister}
-        disabled={isLoading}
-        style={{
-          backgroundColor: theme.accent,
-          padding: Spacing.four,
-          borderRadius: Spacing.three,
-          marginTop: Spacing.four,
-          opacity: isLoading ? 0.6 : 1,
-        }}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#000" />
-        ) : (
-          <ThemedText
-            style={{
-              textAlign: 'center',
-              fontWeight: '700',
-              color: '#000',
-            }}
-          >
-            Registrarse
-          </ThemedText>
-        )}
-      </TouchableOpacity>
+      <PrimaryButton
+  label="Registrarse"
+  loading={isLoading}
+  onPress={handleRegister}
+  style={{ marginTop: Spacing.four }}
+      />
     </ThemedView>
   );
 }

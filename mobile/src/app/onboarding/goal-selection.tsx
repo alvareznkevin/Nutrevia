@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { ArrowDown, Equal, ArrowUp, LucideIcon } from 'lucide-react-native';
 
 import { api } from '@/api';
 import { GoalType } from '@/api/types';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -19,34 +16,18 @@ const options: {
   id: GoalType;
   title: string;
   subtitle: string;
-  icon: string;
+  icon: LucideIcon;
 }[] = [
-  {
-    id: 'lose',
-    title: 'Perder peso',
-    subtitle: 'Reducir el peso de forma gradual.',
-    icon: '↓',
-  },
-  {
-    id: 'maintain',
-    title: 'Mantener peso',
-    subtitle: 'Conservar tu peso actual.',
-    icon: '=',
-  },
-  {
-    id: 'gain',
-    title: 'Aumentar peso',
-    subtitle: 'Incrementar el peso de forma gradual.',
-    icon: '↑',
-  },
+  { id: 'lose', title: 'Perder peso', subtitle: 'Reducir el peso de forma gradual.', icon: ArrowDown },
+  { id: 'maintain', title: 'Mantener peso', subtitle: 'Conservar tu peso actual.', icon: Equal },
+  { id: 'gain', title: 'Aumentar peso', subtitle: 'Incrementar el peso de forma gradual.', icon: ArrowUp },
 ];
 
 
 export default function GoalSelectionScreen() {
   const theme = useTheme();
 
-  const [selected, setSelected] =
-    useState<GoalType>('maintain');
+  const [selected, setSelected] = useState<GoalType>('maintain');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleContinue = async () => {
@@ -54,13 +35,11 @@ export default function GoalSelectionScreen() {
 
     try {
       await api.saveNutritionGoal(selected);
-      router.replace('/onboarding/daily-goal-result');
+      router.push('/onboarding/daily-goal-result');
     } catch (error) {
       Alert.alert(
         'No fue posible calcular el objetivo',
-        error instanceof Error
-          ? error.message
-          : 'Inténtalo nuevamente.',
+        error instanceof Error ? error.message : 'Inténtalo nuevamente.',
       );
     } finally {
       setIsLoading(false);
@@ -68,25 +47,16 @@ export default function GoalSelectionScreen() {
   };
 
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        padding: Spacing.four,
-      }}
-    >
-      <ThemedText type="small" themeColor="accent">
-        Paso 2 de 2
-      </ThemedText>
+    <ThemedView style={{ flex: 1, padding: Spacing.four }}>
+      <ThemedText type="small" themeColor="accent">Paso 2 de 2</ThemedText>
 
-      <ThemedText
-        type="subtitle"
-        style={{ marginTop: Spacing.two }}
-      >
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.two }}>
         ¿Cuál es tu objetivo?
       </ThemedText>
 
       {options.map((option) => {
         const isSelected = selected === option.id;
+        const Icon = option.icon;
 
         return (
           <TouchableOpacity
@@ -95,9 +65,7 @@ export default function GoalSelectionScreen() {
             onPress={() => setSelected(option.id)}
             style={{
               borderWidth: 1,
-              borderColor: isSelected
-                ? theme.accent
-                : theme.border,
+              borderColor: isSelected ? theme.accent : theme.border,
               borderRadius: Spacing.three,
               padding: Spacing.four,
               marginTop: Spacing.three,
@@ -106,32 +74,12 @@ export default function GoalSelectionScreen() {
               justifyContent: 'space-between',
             }}
           >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: Spacing.two,
-                flex: 1,
-              }}
-            >
-              <ThemedText
-                themeColor="accent"
-                style={{ fontSize: 20 }}
-              >
-                {option.icon}
-              </ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flex: 1 }}>
+              <Icon color={theme.accent} size={20} />
 
               <View style={{ flex: 1 }}>
-                <ThemedText type="smallBold">
-                  {option.title}
-                </ThemedText>
-
-                <ThemedText
-                  themeColor="textSecondary"
-                  type="small"
-                >
-                  {option.subtitle}
-                </ThemedText>
+                <ThemedText type="smallBold">{option.title}</ThemedText>
+                <ThemedText themeColor="textSecondary" type="small">{option.subtitle}</ThemedText>
               </View>
             </View>
 
@@ -142,40 +90,19 @@ export default function GoalSelectionScreen() {
                 borderRadius: 11,
                 borderWidth: 2,
                 borderColor: theme.accent,
-                backgroundColor: isSelected
-                  ? theme.accent
-                  : 'transparent',
+                backgroundColor: isSelected ? theme.accent : 'transparent',
               }}
             />
           </TouchableOpacity>
         );
       })}
 
-      <TouchableOpacity
+      <PrimaryButton
+        label="Calcular mi objetivo"
+        loading={isLoading}
         onPress={handleContinue}
-        disabled={isLoading}
-        style={{
-          backgroundColor: theme.accent,
-          padding: Spacing.four,
-          borderRadius: Spacing.three,
-          marginTop: Spacing.six,
-          opacity: isLoading ? 0.6 : 1,
-        }}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#000" />
-        ) : (
-          <ThemedText
-            style={{
-              textAlign: 'center',
-              fontWeight: '700',
-              color: '#000',
-            }}
-          >
-            Calcular mi objetivo
-          </ThemedText>
-        )}
-      </TouchableOpacity>
+        style={{ marginTop: Spacing.six }}
+      />
     </ThemedView>
   );
 }

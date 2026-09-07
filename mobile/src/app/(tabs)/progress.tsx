@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { ThemedView } from '@/components/themed-view';
+import { Card } from '@/components/ui/Card';
+import { OutlineButton } from '@/components/ui/OutlineButton';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
@@ -29,24 +31,27 @@ export default function ProgressScreen() {
         Tu historial empieza a mostrar una visión más completa.
       </ThemedText>
 
-      <ThemedView type="backgroundElement" style={{ borderRadius: Spacing.four, padding: Spacing.four, marginTop: Spacing.four }}>
+      <Card style={{ marginTop: Spacing.four }}>
         <ThemedText type="smallBold">Cambio de peso</ThemedText>
-        <ThemedText themeColor="accent" type="title" style={{ fontSize: 28, marginTop: Spacing.one }}>{change} kg</ThemedText>
-      </ThemedView>
+        <ThemedText themeColor="accent" type="title" style={{ fontSize: 28, marginTop: Spacing.one }}>
+          {change} kg
+        </ThemedText>
+      </Card>
 
       {/* El gráfico de barras + línea de la imagen 11 queda pendiente:
           requiere una librería de gráficos (ej. victory-native) */}
 
-      <TouchableOpacity
-        style={{ backgroundColor: theme.accent, padding: Spacing.four, borderRadius: Spacing.three, marginTop: Spacing.four }}
+      <PrimaryButton
+        label="📷 Registrar comida"
         onPress={() => router.push('/camera')}
-      >
-        <ThemedText style={{ textAlign: 'center', fontWeight: '700', color: '#000' }}>📷 Registrar comida</ThemedText>
-      </TouchableOpacity>
+        style={{ marginTop: Spacing.four }}
+      />
 
-      <TouchableOpacity style={{ borderWidth: 1, borderColor: theme.accent, padding: Spacing.four, borderRadius: Spacing.three, marginTop: Spacing.two }}>
-        <ThemedText themeColor="accent" style={{ textAlign: 'center', fontWeight: '700' }}>⚖️ Registrar peso</ThemedText>
-      </TouchableOpacity>
+      <OutlineButton
+        label="⚖️ Registrar peso"
+        tone="accent"
+        style={{ marginTop: Spacing.two }}
+      />
     </ScrollView>
   );
 }

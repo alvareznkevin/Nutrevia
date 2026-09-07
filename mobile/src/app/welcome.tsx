@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { router } from 'expo-router';
 
 import { api } from '@/api';
@@ -6,13 +6,11 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function WelcomeScreen() {
+  const theme = useTheme();
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    console.log('🔵 WELCOME (index.tsx) SE MONTÓ');
-  }, []);
 
   const handleContinue = async () => {
     setIsLoading(true);
@@ -36,9 +34,16 @@ export default function WelcomeScreen() {
     >
       <ThemedText
         themeColor="accent"
-        style={{ fontSize: 34, fontWeight: '800', letterSpacing: 3, textAlign: 'center' }}
+        style={{ fontSize: 34, fontWeight: '800', letterSpacing: 3 }}
       >
         NUTREVIA
+      </ThemedText>
+
+      <ThemedText
+        type="subtitle"
+        style={{ marginTop: Spacing.four, textAlign: 'center' }}
+      >
+        Bienvenido
       </ThemedText>
 
       <ThemedText

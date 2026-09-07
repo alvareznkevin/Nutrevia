@@ -16,7 +16,7 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Label>Inicio</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
+          src={require('@/assets/images/tabIcons/house.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
@@ -24,7 +24,7 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="diary">
         <NativeTabs.Trigger.Label>Diario</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
+          src={require('@/assets/images/tabIcons/notebook-text.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
@@ -32,7 +32,7 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="progress">
         <NativeTabs.Trigger.Label>Progreso</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
+          src={require('@/assets/images/tabIcons/chart-column.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
@@ -40,7 +40,7 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>Perfil</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
+          src={require('@/assets/images/tabIcons/user.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
