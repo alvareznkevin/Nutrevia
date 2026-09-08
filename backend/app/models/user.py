@@ -25,9 +25,18 @@ class User(Base):
         nullable=False,
     )
 
-    password_hash: Mapped[str] = mapped_column(
+    # Será None cuando el usuario se registre exclusivamente con Google.
+    password_hash: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=False,
+        nullable=True,
+    )
+
+    # Identificador único entregado por Google.
+    google_sub: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        index=True,
+        nullable=True,
     )
 
     is_active: Mapped[bool] = mapped_column(

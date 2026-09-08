@@ -13,7 +13,13 @@ def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
 
-def verify_password(plain_password: str, stored_password_hash: str) -> bool:
+def verify_password(
+    plain_password: str,
+    stored_password_hash: str | None,
+) -> bool:
+    if stored_password_hash is None:
+        return False
+
     return password_hash.verify(
         plain_password,
         stored_password_hash,

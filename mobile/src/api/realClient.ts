@@ -149,7 +149,7 @@ async function getErrorMessage(
 
 async function sendAuthenticationRequest(
   path: string,
-  credentials: AuthCredentials,
+  credentials: unknown,
 ): Promise<AuthResponse> {
   const response = await fetch(
     `${getApiUrl()}${path}`,
@@ -196,6 +196,17 @@ export async function login(
   return sendAuthenticationRequest(
     '/auth/login',
     credentials,
+  );
+}
+
+export async function loginWithGoogle(
+  idToken: string,
+): Promise<AuthResponse> {
+  return sendAuthenticationRequest(
+    '/auth/google',
+    {
+      id_token: idToken,
+    },
   );
 }
 

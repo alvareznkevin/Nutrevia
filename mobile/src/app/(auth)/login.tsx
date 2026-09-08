@@ -5,6 +5,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Link, router } from 'expo-router';
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 
 import { api } from '@/api';
 import { ThemedText } from '@/components/themed-text';
@@ -13,19 +19,107 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 
+const GOOGLE_WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+
+
+if (GOOGLE_WEB_CLIENT_ID) {
+  GoogleSignin.configure({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    offlineAccess: false,
+  });
+}
+
+
 export default function LoginScreen() {
   const theme = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] =
+    useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+
+  const finishAuthentication = async () => {
+    const destination =
+      await api.getStartupDestination();
+
+    router.replace(destination);
+  };
+
+
+  const handleGoogleLogin = async () => {
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      setErrorMessage(
+        'Falta configurar el Client ID de Google.',
+      );
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsLoading(true);
+
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+
+      const response = await GoogleSignin.signIn();
+
+      if (response.type === 'cancelled') {
+        return;
+      }
+
+      const idToken = response.data.idToken;
+
+      if (!idToken) {
+        throw new Error(
+          'Google no entregó un token de identidad.',
+        );
+      }
+
+      await api.loginWithGoogle(idToken);
+      await finishAuthentication();
+    } catch (error) {
+      if (isErrorWithCode(error)) {
+        if (error.code === statusCodes.IN_PROGRESS) {
+          setErrorMessage(
+            'Ya existe un inicio de sesión en curso.',
+          );
+          return;
+        }
+
+        if (
+          error.code ===
+          statusCodes.PLAY_SERVICES_NOT_AVAILABLE
+        ) {
+          setErrorMessage(
+            'Google Play Services no está disponible o necesita actualizarse.',
+          );
+          return;
+        }
+      }
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible iniciar sesión con Google.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   const handleLogin = async () => {
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
-      setErrorMessage('Completa el correo y la contraseña.');
+      setErrorMessage(
+        'Completa el correo y la contraseña.',
+      );
       return;
     }
 
@@ -34,12 +128,11 @@ export default function LoginScreen() {
 
     try {
       await api.login({
-  email: normalizedEmail,
-  password,
-});
+        email: normalizedEmail,
+        password,
+      });
 
-const destination = await api.getStartupDestination();
-router.replace(destination);
+      await finishAuthentication();
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -51,8 +144,14 @@ router.replace(destination);
     }
   };
 
+
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.four }}>
+    <ThemedView
+      style={{
+        flex: 1,
+        padding: Spacing.four,
+      }}
+    >
       <ThemedText type="title">
         Bienvenido a Nutrevia
       </ThemedText>
@@ -65,26 +164,17 @@ router.replace(destination);
         Registra tu alimentación de forma simple e inteligente.
       </ThemedText>
 
-      <TouchableOpacity
-        disabled
+      <GoogleSigninButton
+        size={GoogleSigninButton.Size.Wide}
+        color={GoogleSigninButton.Color.Light}
+        onPress={handleGoogleLogin}
+        disabled={isLoading}
         style={{
-          backgroundColor: '#fff',
-          padding: Spacing.four,
-          borderRadius: Spacing.three,
+          width: '100%',
+          height: 56,
           marginTop: Spacing.six,
-          opacity: 0.5,
         }}
-      >
-        <ThemedText
-          style={{
-            textAlign: 'center',
-            fontWeight: '600',
-            color: '#000',
-          }}
-        >
-          Continuar con Google — próximamente
-        </ThemedText>
-      </TouchableOpacity>
+      />
 
       <ThemedText
         themeColor="textSecondary"
