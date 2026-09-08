@@ -7,8 +7,9 @@ import {
 import { Link, router } from 'expo-router';
 
 import { api } from '@/api';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -53,15 +54,17 @@ router.replace(destination);
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.four }}>
-      <ThemedText type="title">
+    <AppScreen scroll keyboardShouldPersistTaps="handled">
+      <BrandMark centered compact />
+
+      <ThemedText type="title" style={{ marginTop: Spacing.five, textAlign: 'center' }}>
         Bienvenido a Nutrevia
       </ThemedText>
 
       <ThemedText
         type="small"
         themeColor="accent"
-        style={{ marginTop: Spacing.two }}
+        style={{ marginTop: Spacing.two, textAlign: 'center' }}
       >
         Registra tu alimentación de forma simple e inteligente.
       </ThemedText>
@@ -70,9 +73,11 @@ router.replace(destination);
         disabled
         style={{
           backgroundColor: '#fff',
-          padding: Spacing.four,
-          borderRadius: Spacing.three,
-          marginTop: Spacing.six,
+          minHeight: 58,
+          justifyContent: 'center',
+          paddingHorizontal: Spacing.four,
+          borderRadius: 14,
+          marginTop: Spacing.five,
           opacity: 0.5,
         }}
       >
@@ -83,13 +88,13 @@ router.replace(destination);
             color: '#000',
           }}
         >
-          Continuar con Google — próximamente
+          G  Continuar con Google — próximamente
         </ThemedText>
       </TouchableOpacity>
 
       <ThemedText
         themeColor="textSecondary"
-        style={{ marginTop: Spacing.four }}
+        style={{ marginTop: Spacing.five }}
       >
         Correo electrónico
       </ThemedText>
@@ -106,7 +111,8 @@ router.replace(destination);
         style={{
           borderWidth: 1,
           borderColor: theme.border,
-          borderRadius: Spacing.three,
+          borderRadius: 14,
+          minHeight: 58,
           padding: Spacing.three,
           color: theme.text,
           marginTop: Spacing.one,
@@ -130,7 +136,8 @@ router.replace(destination);
         style={{
           borderWidth: 1,
           borderColor: theme.border,
-          borderRadius: Spacing.three,
+          borderRadius: 14,
+          minHeight: 58,
           padding: Spacing.three,
           color: theme.text,
           marginTop: Spacing.one,
@@ -166,6 +173,6 @@ router.replace(destination);
           ¿No tienes una cuenta? Regístrate
         </ThemedText>
       </Link>
-    </ThemedView>
+    </AppScreen>
   );
 }

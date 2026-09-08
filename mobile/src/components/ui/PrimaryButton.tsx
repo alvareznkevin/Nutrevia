@@ -18,8 +18,11 @@ export function PrimaryButton({ label, loading, icon, disabled, style, ...rest }
       style={[
         {
           backgroundColor: theme.accent,
-          padding: Spacing.four,
-          borderRadius: Spacing.three,
+          minHeight: 58,
+          paddingHorizontal: Spacing.four,
+          paddingVertical: Spacing.three,
+          borderRadius: 14,
+          justifyContent: 'center',
           opacity: disabled || loading ? 0.6 : 1,
         },
         style,
@@ -31,7 +34,7 @@ export function PrimaryButton({ label, loading, icon, disabled, style, ...rest }
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two }}>
           {icon}
-          <ThemedText style={{ textAlign: 'center', fontWeight: '700', color: '#000' }}>
+          <ThemedText style={{ textAlign: 'center', fontSize: 17, fontWeight: '700', color: '#04150E' }}>
             {label}
           </ThemedText>
         </View>

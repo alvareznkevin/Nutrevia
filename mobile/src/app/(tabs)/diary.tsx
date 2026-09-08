@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -9,6 +8,8 @@ import { router } from 'expo-router';
 
 import { api } from '@/api';
 import { DailySummary } from '@/api/types';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -93,17 +94,10 @@ export default function DiaryScreen() {
   }
 
   return (
-    <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: theme.background,
-      }}
-      contentContainerStyle={{
-        padding: Spacing.four,
-        paddingBottom: Spacing.six,
-      }}
-    >
-      <ThemedText type="title">
+    <AppScreen scroll>
+      <BrandMark compact />
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>
         Diario nutricional
       </ThemedText>
 
@@ -113,6 +107,8 @@ export default function DiaryScreen() {
           borderRadius: Spacing.four,
           padding: Spacing.four,
           marginTop: Spacing.four,
+          borderWidth: 1,
+          borderColor: theme.border,
         }}
       >
         <ThemedText>
@@ -120,8 +116,7 @@ export default function DiaryScreen() {
         </ThemedText>
 
         <ThemedText
-          type="title"
-          style={{ marginTop: Spacing.one }}
+          style={{ fontSize: 34, lineHeight: 42, fontWeight: '700', marginTop: Spacing.two }}
         >
           {summary.consumedCalories} / {summary.goal.calories} kcal
         </ThemedText>
@@ -240,6 +235,6 @@ export default function DiaryScreen() {
           + Registrar comida
         </ThemedText>
       </TouchableOpacity>
-    </ScrollView>
+    </AppScreen>
   );
 }

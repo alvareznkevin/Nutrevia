@@ -17,7 +17,15 @@ export function OutlineButton({ label, tone = 'default', icon, style, ...rest }:
   return (
     <TouchableOpacity
       style={[
-        { borderWidth: 1, borderColor, padding: Spacing.three, borderRadius: Spacing.three },
+        {
+          minHeight: 54,
+          borderWidth: 1,
+          borderColor,
+          paddingHorizontal: Spacing.three,
+          paddingVertical: Spacing.two,
+          borderRadius: 14,
+          justifyContent: 'center',
+        },
         style,
       ]}
       {...rest}

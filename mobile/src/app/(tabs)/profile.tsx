@@ -8,6 +8,8 @@ import { router } from 'expo-router';
 
 import { api } from '@/api';
 import { AccountProfile } from '@/api/types';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -118,13 +120,10 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        padding: Spacing.four,
-      }}
-    >
-      <ThemedText type="title">
+    <AppScreen scroll>
+      <BrandMark compact />
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>
         Perfil
       </ThemedText>
 
@@ -134,6 +133,8 @@ export default function ProfileScreen() {
           borderRadius: Spacing.four,
           padding: Spacing.four,
           marginTop: Spacing.four,
+          borderWidth: 1,
+          borderColor: theme.border,
         }}
       >
         <ThemedText
@@ -230,6 +231,6 @@ export default function ProfileScreen() {
           </ThemedText>
         )}
       </TouchableOpacity>
-    </ThemedView>
+    </AppScreen>
   );
 }
