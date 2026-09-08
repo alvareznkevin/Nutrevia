@@ -105,3 +105,14 @@ export interface FoodImageResult {
   status: string;
   message: string;
 }
+
+export interface DetectedFood {
+  id: string;
+  name: string;
+  grams: number;
+  kcal: number;
+  proteinGrams: number;
+  carbGrams: number;
+  fatGrams: number;
+  confidence: 'alta' | 'media' | 'baja';
+}

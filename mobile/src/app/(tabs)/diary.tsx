@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react-native';
 
 import { api } from '@/api';
@@ -74,6 +75,7 @@ export default function DiaryScreen() {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { saved } = useLocalSearchParams<{ saved?: string }>();
 
   const loadSummary = async () => {
     setErrorMessage(null);
@@ -116,6 +118,14 @@ export default function DiaryScreen() {
       contentContainerStyle={{ padding: Spacing.four, paddingBottom: Spacing.six }}
     >
       <ThemedText type="title">Diario nutricional</ThemedText>
+
+      {saved === '1' && (
+       <Card style={{ marginTop: Spacing.three, backgroundColor: theme.accent }}>
+       <ThemedText style={{ color: '#000', fontWeight: '700', textAlign: 'center' }}>
+        ✓ Comida guardada correctamente
+       </ThemedText>
+       </Card>
+      )}
 
       <View style={{ marginTop: Spacing.four }}>
         <DateNavigator selectedDate={selectedDate} onSelectDate={setSelectedDate} />

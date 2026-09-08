@@ -113,20 +113,14 @@ export default function CameraScreen() {
     setIsUploading(true);
 
     try {
-      const result =
-        await api.analyzeFoodImage(photoUri);
+      await api.analyzeFoodImage(photoUri);
 
-      Alert.alert(
-        'Imagen recibida',
-        `${result.message}\n\nDimensiones: ${result.width} × ${result.height}`,
-        [
-          {
-            text: 'Volver al inicio',
-            onPress: () => router.replace('/home'),
-          },
-        ],
-      );
+      router.replace({
+        pathname: '/review-meal',
+        params: { photoUri },
+      });
     } catch (error) {
+      
       Alert.alert(
         'No fue posible enviar la imagen',
         error instanceof Error
