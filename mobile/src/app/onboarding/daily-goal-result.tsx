@@ -7,10 +7,12 @@ import {
 import { router } from 'expo-router';
 
 import { api } from '@/api';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { NutritionGoalResult } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { AppPalette, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 
@@ -130,18 +132,19 @@ export default function DailyGoalResultScreen() {
   ];
 
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        padding: Spacing.four,
+    <AppScreen
+      scroll
+      contentContainerStyle={{
         alignItems: 'center',
       }}
     >
+      <BrandMark centered compact />
+
       <ThemedText
         themeColor="accent"
         style={{
           fontSize: 32,
-          marginTop: Spacing.four,
+          marginTop: Spacing.three,
         }}
       >
         ✓
@@ -155,7 +158,7 @@ export default function DailyGoalResultScreen() {
       </ThemedText>
 
       <ThemedText
-        themeColor="textSecondary"
+        themeColor="accent"
         type="small"
         style={{
           textAlign: 'center',
@@ -173,6 +176,9 @@ export default function DailyGoalResultScreen() {
           marginTop: Spacing.four,
           width: '100%',
           alignItems: 'center',
+          backgroundColor: AppPalette.surface,
+          borderWidth: 1,
+          borderColor: theme.accent,
         }}
       >
         <ThemedText themeColor="accent" type="small">
@@ -201,6 +207,9 @@ export default function DailyGoalResultScreen() {
               borderRadius: Spacing.three,
               padding: Spacing.two,
               alignItems: 'center',
+              backgroundColor: AppPalette.surface,
+              borderWidth: 1,
+              borderColor: AppPalette.border,
             }}
           >
             <ThemedText
@@ -223,7 +232,7 @@ export default function DailyGoalResultScreen() {
           backgroundColor: theme.accent,
           padding: Spacing.four,
           borderRadius: Spacing.three,
-          marginTop: Spacing.six,
+          marginTop: Spacing.five,
           width: '100%',
         }}
       >
@@ -237,6 +246,6 @@ export default function DailyGoalResultScreen() {
           Confirmar objetivo
         </ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+    </AppScreen>
   );
 }

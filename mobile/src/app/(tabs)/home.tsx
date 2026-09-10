@@ -5,6 +5,8 @@ import { Camera, Barcode, Search } from 'lucide-react-native';
 
 import { api } from '@/api';
 import { DailySummary } from '@/api/types';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { Card } from '@/components/ui/Card';
 import { OutlineButton } from '@/components/ui/OutlineButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -65,17 +67,21 @@ export default function HomeScreen() {
   ];
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.four }}>
-      <ThemedText type="title">Buenos días</ThemedText>
+    <AppScreen scroll>
+      <BrandMark compact />
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>
+        Buenos días
+      </ThemedText>
 
       <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
         Tu progreso de hoy
       </ThemedText>
 
       <Card style={{ marginTop: Spacing.four }}>
-        <ThemedText>Resumen diario</ThemedText>
+        <ThemedText type="smallBold">Resumen diario</ThemedText>
 
-        <ThemedText type="title" style={{ marginTop: Spacing.one }}>
+        <ThemedText style={{ fontSize: 34, lineHeight: 42, fontWeight: '700', marginTop: Spacing.two }}>
           {summary.consumedCalories} / {summary.goal.calories} kcal
         </ThemedText>
 
@@ -119,6 +125,6 @@ export default function HomeScreen() {
           style={{ flex: 1 }}
         />
       </View>
-    </ThemedView>
+    </AppScreen>
   );
 }

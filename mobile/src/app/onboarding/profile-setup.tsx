@@ -2,20 +2,21 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
   TextInput,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import { router } from 'expo-router';
 
 import { api } from '@/api';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import {
   ActivityLevel,
   CalculationSex,
 } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { AppPalette, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 
@@ -134,27 +135,30 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1 }}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          padding: Spacing.four,
-          paddingBottom: Spacing.six,
-        }}
-      >
-        <ThemedText type="small" themeColor="accent">
+    <AppScreen scroll keyboardShouldPersistTaps="handled">
+        <BrandMark centered compact />
+
+        <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.four, textAlign: 'center' }}>
           Paso 1 de 2
         </ThemedText>
 
+        <View style={{ height: 7, borderRadius: 4, backgroundColor: theme.border, marginTop: Spacing.two, overflow: 'hidden' }}>
+          <View style={{ width: '50%', height: '100%', backgroundColor: theme.accent }} />
+        </View>
+
         <ThemedText
           type="subtitle"
-          style={{ marginTop: Spacing.two }}
+          style={{ marginTop: Spacing.five, textAlign: 'center' }}
         >
           Cuéntanos sobre ti
         </ThemedText>
 
+        <ThemedText themeColor="textSecondary" style={{ marginTop: Spacing.two, textAlign: 'center' }}>
+          Usaremos estos datos para calcular tu objetivo nutricional inicial.
+        </ThemedText>
+
         <ThemedText
-          themeColor="textSecondary"
+          themeColor="text"
           style={{ marginTop: Spacing.four }}
         >
           Edad
@@ -170,7 +174,9 @@ export default function ProfileSetupScreen() {
           style={{
             borderWidth: 1,
             borderColor: theme.border,
-            borderRadius: Spacing.three,
+            borderRadius: 14,
+            minHeight: 58,
+            backgroundColor: AppPalette.surface,
             padding: Spacing.three,
             color: theme.text,
             marginTop: Spacing.one,
@@ -178,7 +184,7 @@ export default function ProfileSetupScreen() {
         />
 
         <ThemedText
-          themeColor="textSecondary"
+          themeColor="text"
           style={{ marginTop: Spacing.three }}
         >
           Altura (cm)
@@ -194,7 +200,9 @@ export default function ProfileSetupScreen() {
           style={{
             borderWidth: 1,
             borderColor: theme.border,
-            borderRadius: Spacing.three,
+            borderRadius: 14,
+            minHeight: 58,
+            backgroundColor: AppPalette.surface,
             padding: Spacing.three,
             color: theme.text,
             marginTop: Spacing.one,
@@ -202,7 +210,7 @@ export default function ProfileSetupScreen() {
         />
 
         <ThemedText
-          themeColor="textSecondary"
+          themeColor="text"
           style={{ marginTop: Spacing.three }}
         >
           Peso actual (kg)
@@ -218,7 +226,9 @@ export default function ProfileSetupScreen() {
           style={{
             borderWidth: 1,
             borderColor: theme.border,
-            borderRadius: Spacing.three,
+            borderRadius: 14,
+            minHeight: 58,
+            backgroundColor: AppPalette.surface,
             padding: Spacing.three,
             color: theme.text,
             marginTop: Spacing.one,
@@ -226,7 +236,7 @@ export default function ProfileSetupScreen() {
         />
 
         <ThemedText
-          themeColor="textSecondary"
+          themeColor="text"
           style={{ marginTop: Spacing.four }}
         >
           Sexo utilizado para el cálculo energético
@@ -246,9 +256,9 @@ export default function ProfileSetupScreen() {
                   ? theme.accent
                   : theme.border,
                 backgroundColor: selected
-                  ? theme.accent
-                  : 'transparent',
-                borderRadius: Spacing.three,
+                  ? AppPalette.surfaceStrong
+                  : AppPalette.surface,
+                borderRadius: 14,
                 padding: Spacing.three,
                 marginTop: Spacing.two,
               }}
@@ -256,7 +266,7 @@ export default function ProfileSetupScreen() {
               <ThemedText
                 style={{
                   fontWeight: '700',
-                  color: selected ? '#000' : theme.text,
+                  color: theme.text,
                 }}
               >
                 {option.title}
@@ -266,7 +276,7 @@ export default function ProfileSetupScreen() {
         })}
 
         <ThemedText
-          themeColor="textSecondary"
+          themeColor="text"
           style={{ marginTop: Spacing.four }}
         >
           Nivel de actividad física
@@ -286,9 +296,9 @@ export default function ProfileSetupScreen() {
                   ? theme.accent
                   : theme.border,
                 backgroundColor: selected
-                  ? theme.accent
-                  : 'transparent',
-                borderRadius: Spacing.three,
+                  ? AppPalette.surfaceStrong
+                  : AppPalette.surface,
+                borderRadius: 14,
                 padding: Spacing.three,
                 marginTop: Spacing.two,
               }}
@@ -296,7 +306,7 @@ export default function ProfileSetupScreen() {
               <ThemedText
                 style={{
                   fontWeight: '700',
-                  color: selected ? '#000' : theme.text,
+                  color: theme.text,
                 }}
               >
                 {option.title}
@@ -306,9 +316,7 @@ export default function ProfileSetupScreen() {
                 type="small"
                 style={{
                   marginTop: Spacing.one,
-                  color: selected
-                    ? '#000'
-                    : theme.textSecondary,
+                  color: theme.textSecondary,
                 }}
               >
                 {option.description}
@@ -342,7 +350,6 @@ export default function ProfileSetupScreen() {
             </ThemedText>
           )}
         </TouchableOpacity>
-      </ScrollView>
-    </ThemedView>
+    </AppScreen>
   );
 }

@@ -4,11 +4,12 @@ import { router } from 'expo-router';
 import { ArrowDown, Equal, ArrowUp, LucideIcon } from 'lucide-react-native';
 
 import { api } from '@/api';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { GoalType } from '@/api/types';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { AppPalette, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 
@@ -47,11 +48,23 @@ export default function GoalSelectionScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.four }}>
-      <ThemedText type="small" themeColor="accent">Paso 2 de 2</ThemedText>
+    <AppScreen scroll>
+      <BrandMark centered compact />
 
-      <ThemedText type="subtitle" style={{ marginTop: Spacing.two }}>
+      <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.four, textAlign: 'center' }}>
+        Paso 2 de 2
+      </ThemedText>
+
+      <View style={{ height: 7, borderRadius: 4, backgroundColor: theme.border, marginTop: Spacing.two, overflow: 'hidden' }}>
+        <View style={{ width: '100%', height: '100%', backgroundColor: theme.accent }} />
+      </View>
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.five, textAlign: 'center' }}>
         ¿Cuál es tu objetivo?
+      </ThemedText>
+
+      <ThemedText themeColor="textSecondary" style={{ marginTop: Spacing.two, marginBottom: Spacing.two, textAlign: 'center' }}>
+        Selecciona lo que quieres conseguir para calcular tu objetivo nutricional inicial.
       </ThemedText>
 
       {options.map((option) => {
@@ -69,6 +82,9 @@ export default function GoalSelectionScreen() {
               borderRadius: Spacing.three,
               padding: Spacing.four,
               marginTop: Spacing.three,
+              backgroundColor: isSelected
+                ? AppPalette.surfaceStrong
+                : AppPalette.surface,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -101,8 +117,8 @@ export default function GoalSelectionScreen() {
         label="Calcular mi objetivo"
         loading={isLoading}
         onPress={handleContinue}
-        style={{ marginTop: Spacing.six }}
+        style={{ marginTop: Spacing.five }}
       />
-    </ThemedView>
+    </AppScreen>
   );
 }

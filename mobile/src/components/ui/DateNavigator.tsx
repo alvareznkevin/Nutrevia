@@ -60,15 +60,29 @@ export function DateNavigator({ selectedDate, onSelectDate }: DateNavigatorProps
           paddingHorizontal: Spacing.three,
         }}
       >
-        <TouchableOpacity onPress={() => onSelectDate(addDays(selectedDate, -1))} hitSlop={8}>
+        <TouchableOpacity
+          onPress={() => onSelectDate(addDays(selectedDate, -1))}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Ver día anterior"
+        >
           <ChevronLeft color={theme.text} size={18} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setExpanded((value) => !value)}>
+        <TouchableOpacity
+          onPress={() => setExpanded((value) => !value)}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir selector de fecha"
+        >
           <ThemedText type="smallBold">{formatCollapsedLabel(selectedDate, today)}</ThemedText>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => onSelectDate(addDays(selectedDate, 1))} hitSlop={8}>
+        <TouchableOpacity
+          onPress={() => onSelectDate(addDays(selectedDate, 1))}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Ver día siguiente"
+        >
           <ChevronRight color={theme.text} size={18} />
         </TouchableOpacity>
       </View>
@@ -84,7 +98,12 @@ export function DateNavigator({ selectedDate, onSelectDate }: DateNavigatorProps
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={() => setWeekAnchor((current) => addDays(current, -7))} hitSlop={8}>
+            <TouchableOpacity
+              onPress={() => setWeekAnchor((current) => addDays(current, -7))}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ver semana anterior"
+            >
               <ChevronLeft color={theme.text} size={18} />
             </TouchableOpacity>
 
@@ -92,7 +111,12 @@ export function DateNavigator({ selectedDate, onSelectDate }: DateNavigatorProps
               {MONTH_LABELS[weekAnchor.getMonth()]} {weekAnchor.getFullYear()}
             </ThemedText>
 
-            <TouchableOpacity onPress={() => setWeekAnchor((current) => addDays(current, 7))} hitSlop={8}>
+            <TouchableOpacity
+              onPress={() => setWeekAnchor((current) => addDays(current, 7))}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ver semana siguiente"
+            >
               <ChevronRight color={theme.text} size={18} />
             </TouchableOpacity>
           </View>
@@ -109,6 +133,8 @@ export function DateNavigator({ selectedDate, onSelectDate }: DateNavigatorProps
                     setExpanded(false);
                   }}
                   style={{ alignItems: 'center' }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${DAY_LABELS[index]} ${day.getDate()}`}
                 >
                   <ThemedText type="small" themeColor="textSecondary">{DAY_LABELS[index]}</ThemedText>
 

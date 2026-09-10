@@ -7,8 +7,9 @@ import {
 import { router } from 'expo-router';
 
 import { api } from '@/api';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -57,14 +58,16 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.four }}>
-      <ThemedText type="title">
+    <AppScreen scroll keyboardShouldPersistTaps="handled">
+      <BrandMark centered compact />
+
+      <ThemedText type="title" style={{ marginTop: Spacing.five, textAlign: 'center' }}>
         Crea tu cuenta
       </ThemedText>
 
       <ThemedText
         themeColor="textSecondary"
-        style={{ marginTop: Spacing.four }}
+        style={{ marginTop: Spacing.five }}
       >
         Correo electrónico
       </ThemedText>
@@ -81,7 +84,8 @@ export default function RegisterScreen() {
         style={{
           borderWidth: 1,
           borderColor: theme.border,
-          borderRadius: Spacing.three,
+          borderRadius: 14,
+          minHeight: 58,
           padding: Spacing.three,
           color: theme.text,
           marginTop: Spacing.one,
@@ -105,7 +109,8 @@ export default function RegisterScreen() {
         style={{
           borderWidth: 1,
           borderColor: theme.border,
-          borderRadius: Spacing.three,
+          borderRadius: 14,
+          minHeight: 58,
           padding: Spacing.three,
           color: theme.text,
           marginTop: Spacing.one,
@@ -129,6 +134,6 @@ export default function RegisterScreen() {
   onPress={handleRegister}
   style={{ marginTop: Spacing.four }}
       />
-    </ThemedView>
+    </AppScreen>
   );
 }

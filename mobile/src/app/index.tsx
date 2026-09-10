@@ -1,18 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { router } from 'expo-router';
 
 import { api } from '@/api';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 
 export default function WelcomeScreen() {
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    console.log('🔵 WELCOME (index.tsx) SE MONTÓ');
-  }, []);
 
   const handleContinue = async () => {
     setIsLoading(true);
@@ -26,25 +23,17 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <ThemedView
-      style={{
-        flex: 1,
+    <AppScreen
+      contentContainerStyle={{
         alignItems: 'center',
         justifyContent: 'center',
-        padding: Spacing.four,
       }}
     >
-      <ThemedText
-        themeColor="accent"
-        style={{ fontSize: 34, fontWeight: '800', letterSpacing: 3, textAlign: 'center' }}
-      >
-        NUTREVIA
-      </ThemedText>
+      <BrandMark centered />
 
       <ThemedText
         themeColor="textSecondary"
-        type="small"
-        style={{ marginTop: Spacing.one, textAlign: 'center' }}
+        style={{ marginTop: Spacing.two, textAlign: 'center' }}
       >
         Nutrición inteligente
       </ThemedText>
@@ -53,8 +42,8 @@ export default function WelcomeScreen() {
         label={isLoading ? '' : 'Comenzar'}
         loading={isLoading}
         onPress={handleContinue}
-        style={{ marginTop: Spacing.six, width: '100%' }}
+        style={{ marginTop: Spacing.six, width: '100%', maxWidth: 560 }}
       />
-    </ThemedView>
+    </AppScreen>
   );
 } 

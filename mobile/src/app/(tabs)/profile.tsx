@@ -5,9 +5,14 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import {
+  GoogleSignin,
+} from '@react-native-google-signin/google-signin';
 
 import { api } from '@/api';
 import { AccountProfile } from '@/api/types';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -35,7 +40,9 @@ export default function ProfileScreen() {
     useState<AccountProfile | null>(null);
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] =
+    useState(false);
+
 
   const loadProfile = async () => {
     setErrorMessage(null);
@@ -52,20 +59,46 @@ export default function ProfileScreen() {
     }
   };
 
+
   useEffect(() => {
-    loadProfile();
+    void loadProfile();
   }, []);
+
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    setErrorMessage(null);
 
     try {
+      /*
+       * Cierra la sesión administrada por Google.
+       * Si el usuario ingresó con correo y contraseña,
+       * puede que no exista una sesión de Google.
+       */
+      try {
+        if (GoogleSignin.hasPreviousSignIn()) {
+          await GoogleSignin.signOut();
+        }
+      } catch {
+        /*
+         * Aunque Google no pueda cerrar su sesión,
+         * igualmente eliminamos la sesión de Nutrevia.
+         */
+      }
+
       await api.logout();
       router.replace('/login');
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible cerrar la sesión.',
+      );
     } finally {
       setIsLoggingOut(false);
     }
   };
+
 
   if (!profile && !errorMessage) {
     return (
@@ -75,6 +108,7 @@ export default function ProfileScreen() {
       />
     );
   }
+
 
   if (!profile) {
     return (
@@ -117,14 +151,12 @@ export default function ProfileScreen() {
     );
   }
 
+
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        padding: Spacing.four,
-      }}
-    >
-      <ThemedText type="title">
+    <AppScreen scroll>
+      <BrandMark compact />
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>
         Perfil
       </ThemedText>
 
@@ -134,6 +166,8 @@ export default function ProfileScreen() {
           borderRadius: Spacing.four,
           padding: Spacing.four,
           marginTop: Spacing.four,
+          borderWidth: 1,
+          borderColor: theme.border,
         }}
       >
         <ThemedText
@@ -158,27 +192,39 @@ export default function ProfileScreen() {
           }}
         >
           <View>
-            <ThemedText themeColor="accent" type="small">
+            <ThemedText
+              themeColor="accent"
+              type="small"
+            >
               Edad
             </ThemedText>
+
             <ThemedText type="small">
               {profile.age} años
             </ThemedText>
           </View>
 
           <View>
-            <ThemedText themeColor="accent" type="small">
+            <ThemedText
+              themeColor="accent"
+              type="small"
+            >
               Altura
             </ThemedText>
+
             <ThemedText type="small">
               {profile.heightCm} cm
             </ThemedText>
           </View>
 
           <View>
-            <ThemedText themeColor="accent" type="small">
+            <ThemedText
+              themeColor="accent"
+              type="small"
+            >
               Peso actual
             </ThemedText>
+
             <ThemedText type="small">
               {profile.currentWeightKg} kg
             </ThemedText>
@@ -186,23 +232,47 @@ export default function ProfileScreen() {
         </View>
 
         <View style={{ marginTop: Spacing.four }}>
-          <ThemedText themeColor="accent" type="small">
+          <ThemedText
+            themeColor="accent"
+            type="small"
+          >
             Actividad física
           </ThemedText>
+
           <ThemedText type="small">
             {activityLabels[profile.activityLevel]}
           </ThemedText>
         </View>
 
         <View style={{ marginTop: Spacing.three }}>
-          <ThemedText themeColor="accent" type="small">
+          <ThemedText
+            themeColor="accent"
+            type="small"
+          >
             Sexo para cálculo energético
           </ThemedText>
+
           <ThemedText type="small">
-            {calculationSexLabels[profile.calculationSex]}
+            {
+              calculationSexLabels[
+                profile.calculationSex
+              ]
+            }
           </ThemedText>
         </View>
       </ThemedView>
+
+      {errorMessage && (
+        <ThemedText
+          style={{
+            color: '#ef4444',
+            textAlign: 'center',
+            marginTop: Spacing.three,
+          }}
+        >
+          {errorMessage}
+        </ThemedText>
+      )}
 
       <TouchableOpacity
         onPress={handleLogout}
@@ -230,6 +300,6 @@ export default function ProfileScreen() {
           </ThemedText>
         )}
       </TouchableOpacity>
-    </ThemedView>
+    </AppScreen>
   );
 }

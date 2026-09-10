@@ -68,10 +68,18 @@ function MealOptionsMenu({ onDelete }: { onDelete: () => void }) {
     </View>
   );
 }
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
 
 export default function DiaryScreen() {
   const theme = useTheme();
 
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -113,90 +121,180 @@ export default function DiaryScreen() {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.background }}
-      contentContainerStyle={{ padding: Spacing.four, paddingBottom: Spacing.six }}
-    >
-      <ThemedText type="title">Diario nutricional</ThemedText>
+    <AppScreen scroll>
+      <BrandMark compact />
 
-      {saved === '1' && (
-       <Card style={{ marginTop: Spacing.three, backgroundColor: theme.accent }}>
-       <ThemedText style={{ color: '#000', fontWeight: '700', textAlign: 'center' }}>
-        ✓ Comida guardada correctamente
-       </ThemedText>
-       </Card>
-      )}
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>
+        Diario nutricional
+      </ThemedText>
 
       <View style={{ marginTop: Spacing.four }}>
-        <DateNavigator selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+        <DateNavigator
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       </View>
 
       {!isToday ? (
-        <Card style={{ marginTop: Spacing.four }}>
-          <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
-            La consulta de días anteriores todavía no está disponible — falta que el backend guarde el historial por fecha.
+        <ThemedView
+          type="backgroundElement"
+          style={{
+            borderRadius: Spacing.three,
+            padding: Spacing.four,
+            marginTop: Spacing.four,
+          }}
+        >
+          <ThemedText
+            themeColor="textSecondary"
+            style={{ textAlign: 'center' }}
+          >
+            La consulta de días anteriores estará disponible cuando el
+            historial de comidas se encuentre conectado.
           </ThemedText>
-        </Card>
+        </ThemedView>
       ) : (
         <>
-          <Card style={{ marginTop: Spacing.four }}>
-            <ThemedText>Resumen del día — {summary.date}</ThemedText>
+          <ThemedView
+            type="backgroundElement"
+            style={{
+              borderRadius: Spacing.four,
+              padding: Spacing.four,
+              marginTop: Spacing.four,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <ThemedText>
+              Resumen del día — {summary.date}
+            </ThemedText>
 
-            <ThemedText type="title" style={{ marginTop: Spacing.one }}>
+            <ThemedText
+              style={{
+                fontSize: 34,
+                lineHeight: 42,
+                fontWeight: '700',
+                marginTop: Spacing.two,
+              }}
+            >
               {summary.consumedCalories} / {summary.goal.calories} kcal
             </ThemedText>
 
-            <View style={{ marginTop: Spacing.two }}>
-              <ProgressBar value={summary.consumedCalories} max={summary.goal.calories} />
-            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginTop: Spacing.three,
+              }}
+            >
+              <View>
+                <ThemedText themeColor="accent" type="small">
+                  Proteínas
+                </ThemedText>
+                <ThemedText type="small">
+                  {summary.consumedMacros.protein} / {summary.goal.protein} g
+                </ThemedText>
+              </View>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.three }}>
               <View>
-                <ThemedText themeColor="accent" type="small">Proteínas</ThemedText>
-                <ThemedText type="small">{summary.consumedMacros.protein} / {summary.goal.protein} g</ThemedText>
+                <ThemedText themeColor="accent" type="small">
+                  Carbohidratos
+                </ThemedText>
+                <ThemedText type="small">
+                  {summary.consumedMacros.carbs} / {summary.goal.carbs} g
+                </ThemedText>
               </View>
+
               <View>
-                <ThemedText themeColor="accent" type="small">Carbohidratos</ThemedText>
-                <ThemedText type="small">{summary.consumedMacros.carbs} / {summary.goal.carbs} g</ThemedText>
-              </View>
-              <View>
-                <ThemedText themeColor="accent" type="small">Grasas</ThemedText>
-                <ThemedText type="small">{summary.consumedMacros.fat} / {summary.goal.fat} g</ThemedText>
+                <ThemedText themeColor="accent" type="small">
+                  Grasas
+                </ThemedText>
+                <ThemedText type="small">
+                  {summary.consumedMacros.fat} / {summary.goal.fat} g
+                </ThemedText>
               </View>
             </View>
-          </Card>
+          </ThemedView>
 
-          <ThemedText type="smallBold" style={{ marginTop: Spacing.four }}>Comidas registradas</ThemedText>
+          <ThemedText
+            type="smallBold"
+            style={{ marginTop: Spacing.four }}
+          >
+            Comidas registradas
+          </ThemedText>
 
           {summary.meals.length === 0 ? (
-            <Card style={{ marginTop: Spacing.two }}>
-              <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
+            <ThemedView
+              type="backgroundElement"
+              style={{
+                borderRadius: Spacing.three,
+                padding: Spacing.four,
+                marginTop: Spacing.two,
+              }}
+            >
+              <ThemedText
+                themeColor="textSecondary"
+                style={{ textAlign: 'center' }}
+              >
                 Todavía no has registrado comidas hoy.
               </ThemedText>
-            </Card>
+            </ThemedView>
           ) : (
             summary.meals.map((meal) => (
-              <Card key={meal.id} style={{ marginTop: Spacing.two, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <ThemedView
+                key={meal.id}
+                type="backgroundElement"
+                style={{
+                  borderRadius: Spacing.three,
+                  padding: Spacing.three,
+                  marginTop: Spacing.two,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <View>
-                  <ThemedText type="smallBold" style={{ textTransform: 'capitalize' }}>{meal.type}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">{meal.time} · {meal.description}</ThemedText>
+                  <ThemedText
+                    type="smallBold"
+                    style={{ textTransform: 'capitalize' }}
+                  >
+                    {meal.type}
+                  </ThemedText>
+
+                  <ThemedText
+                    type="small"
+                    themeColor="textSecondary"
+                  >
+                    {meal.time} · {meal.description}
+                  </ThemedText>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-                  <ThemedText type="smallBold">{meal.calories} kcal</ThemedText>
-                  <MealOptionsMenu onDelete={() => handleDeleteMeal(meal.id)} />
-                </View>
-              </Card>
+                <ThemedText type="smallBold">
+                  {meal.calories} kcal
+                </ThemedText>
+              </ThemedView>
             ))
           )}
 
-          <PrimaryButton
-            label="+ Registrar comida"
+          <TouchableOpacity
             onPress={() => router.push('/camera')}
-            style={{ marginTop: Spacing.four }}
-          />
+            style={{
+              backgroundColor: theme.accent,
+              padding: Spacing.four,
+              borderRadius: Spacing.three,
+              marginTop: Spacing.four,
+            }}
+          >
+            <ThemedText
+              style={{
+                textAlign: 'center',
+                fontWeight: '700',
+                color: '#000',
+              }}
+            >
+              + Registrar comida
+            </ThemedText>
+          </TouchableOpacity>
         </>
       )}
-    </ScrollView>
+    </AppScreen>
   );
 }

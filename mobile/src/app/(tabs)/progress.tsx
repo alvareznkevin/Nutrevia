@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Card } from '@/components/ui/Card';
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { OutlineButton } from '@/components/ui/OutlineButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ThemedText } from '@/components/themed-text';
@@ -25,8 +27,10 @@ export default function ProgressScreen() {
   const change = (history[history.length - 1].weightKg - history[0].weightKg).toFixed(1);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.background }} contentContainerStyle={{ padding: Spacing.four }}>
-      <ThemedText type="title">Tu semana</ThemedText>
+    <AppScreen scroll>
+      <BrandMark compact />
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>Tu semana</ThemedText>
       <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
         Tu historial empieza a mostrar una visión más completa.
       </ThemedText>
@@ -52,6 +56,6 @@ export default function ProgressScreen() {
         tone="accent"
         style={{ marginTop: Spacing.two }}
       />
-    </ScrollView>
+    </AppScreen>
   );
 }
