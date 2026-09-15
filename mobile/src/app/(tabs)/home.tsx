@@ -41,22 +41,30 @@ export default function HomeScreen() {
   }, []);
 
   if (!summary && !errorMessage) {
-    return <ActivityIndicator style={{ flex: 1 }} color={theme.accent} />;
+    return (
+      <AppScreen>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={theme.accent} />
+        </View>
+      </AppScreen>
+    );
   }
 
   if (!summary) {
     return (
-      <ThemedView style={{ flex: 1, padding: Spacing.four, justifyContent: 'center' }}>
-        <ThemedText style={{ color: '#ef4444', textAlign: 'center' }}>
-          {errorMessage}
-        </ThemedText>
+      <AppScreen>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ThemedText style={{ color: '#ef4444', textAlign: 'center' }}>
+            {errorMessage}
+          </ThemedText>
 
-        <PrimaryButton
-          label="Intentar nuevamente"
-          onPress={loadSummary}
-          style={{ marginTop: Spacing.four }}
-        />
-      </ThemedView>
+          <PrimaryButton
+            label="Intentar nuevamente"
+            onPress={loadSummary}
+            style={{ marginTop: Spacing.four }}
+          />
+        </View>
+      </AppScreen>
     );
   }
 
