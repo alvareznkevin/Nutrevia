@@ -9,11 +9,17 @@ from fastapi import (
     UploadFile,
     status,
 )
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
+from starlette.concurrency import run_in_threadpool
 
 from app.api.dependencies.auth import get_current_user
+from app.core.config import settings
 from app.models.user import User
 from app.schemas.food_image import FoodImageResponse
+from app.services.food_detection import (
+    FoodDetectionUnavailableError,
+    detect_foods,
+)
 
 
 router = APIRouter(
@@ -76,7 +82,9 @@ async def analyze_food_image(
             image.verify()
 
         with Image.open(BytesIO(contents)) as image:
-            width, height = image.size
+            image.load()
+            normalized_image = ImageOps.exif_transpose(image).convert("RGB")
+            width, height = normalized_image.size
     except (UnidentifiedImageError, OSError):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -89,15 +97,39 @@ async def analyze_food_image(
             detail="El formato real de la imagen no está permitido.",
         )
 
+    try:
+        detections = await run_in_threadpool(
+            detect_foods,
+            normalized_image,
+        )
+    except FoodDetectionUnavailableError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(error),
+        ) from error
+
+    if detections:
+        detected_names = ", ".join(
+            dict.fromkeys(detection.name for detection in detections)
+        )
+        message = (
+            f"Detectamos: {detected_names}. "
+            "Confirma el resultado antes de guardarlo."
+        )
+    else:
+        message = (
+            "No detectamos alimentos compatibles. Intenta tomar otra fotografía "
+            "con el plato completo y buena iluminación."
+        )
+
     return FoodImageResponse(
         filename=file.filename or "food-image",
         content_type=file.content_type,
         size_bytes=len(contents),
         width=width,
         height=height,
-        status="received",
-        message=(
-            "La imagen fue recibida correctamente y está preparada "
-            "para su análisis futuro."
-        ),
+        status="analyzed",
+        message=message,
+        model=settings.food_detection_model,
+        detections=detections,
     )

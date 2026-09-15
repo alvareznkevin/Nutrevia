@@ -104,4 +104,18 @@ export interface FoodImageResult {
   height: number;
   status: string;
   message: string;
+  model: string;
+  detections: DetectedFood[];
+}
+
+export interface DetectedFood {
+  key: string;
+  name: string;
+  confidence: number;
+  boundingBox: {
+    xMin: number;
+    yMin: number;
+    xMax: number;
+    yMax: number;
+  };
 }

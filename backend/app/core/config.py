@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     google_client_id: str
 
+    food_detection_model: str = "yolov8s-world.pt"
+    food_detection_confidence: float = 0.30
+    food_detection_image_size: int = 640
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

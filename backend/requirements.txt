@@ -10,3 +10,5 @@ email-validator
 python-multipart
 Pillow
 google-auth[requests]
+ultralytics
+git+https://github.com/ultralytics/CLIP.git

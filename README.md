@@ -109,6 +109,23 @@ Escanear el código QR con Expo Go.
 - **Faltan tablas:** ejecutar `docker compose exec backend alembic upgrade head`.
 - **Cambió `requirements.txt`:** ejecutar `docker compose up -d --build`.
 
+## Detección inicial de alimentos
+
+El endpoint `POST /food-images/analyze` utiliza YOLO-World para buscar una
+lista inicial de alimentos: arroz, fideos, pollo, papa, tomate y huevo. En la primera
+ejecución el backend puede tardar mientras descarga los pesos del modelo y el
+codificador de texto CLIP. La caché queda guardada en un volumen de Docker. La
+respuesta entrega el nombre del alimento, nivel de confianza y coordenadas de
+su ubicación en la fotografía.
+
+Se utilizan distintas descripciones visuales para arroz, fideos, pollo y huevo.
+Cuando más de una descripción detecta el mismo alimento, la API conserva solo
+el resultado con mayor confianza para evitar duplicados.
+
+Esta primera versión detecta alimentos, pero todavía no calcula gramos ni
+calorías automáticamente. La persona debe confirmar el resultado y la porción
+antes de incorporarlo al diario.
+
 ## Importante
 
 No subir a GitHub los archivos `.env`, contraseñas, claves JWT ni tokens.

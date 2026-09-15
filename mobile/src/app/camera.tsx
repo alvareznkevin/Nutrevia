@@ -116,9 +116,17 @@ export default function CameraScreen() {
       const result =
         await api.analyzeFoodImage(photoUri);
 
+      const detectionSummary = result.detections.length > 0
+        ? result.detections
+          .map((detection) => (
+            `${detection.name}: ${Math.round(detection.confidence * 100)}%`
+          ))
+          .join('\n')
+        : 'No se encontraron alimentos de la lista inicial.';
+
       Alert.alert(
-        'Imagen recibida',
-        `${result.message}\n\nDimensiones: ${result.width} × ${result.height}`,
+        'Análisis completado',
+        `${result.message}\n\n${detectionSummary}`,
         [
           {
             text: 'Volver al inicio',

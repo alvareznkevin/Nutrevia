@@ -69,6 +69,18 @@ interface BackendFoodImageResult {
   height: number;
   status: string;
   message: string;
+  model: string;
+  detections: {
+    key: string;
+    name: string;
+    confidence: number;
+    bounding_box: {
+      x_min: number;
+      y_min: number;
+      x_max: number;
+      y_max: number;
+    };
+  }[];
 }
 
 
@@ -548,5 +560,17 @@ export async function analyzeFoodImage(
     height: result.height,
     status: result.status,
     message: result.message,
+    model: result.model,
+    detections: result.detections.map((detection) => ({
+      key: detection.key,
+      name: detection.name,
+      confidence: detection.confidence,
+      boundingBox: {
+        xMin: detection.bounding_box.x_min,
+        yMin: detection.bounding_box.y_min,
+        xMax: detection.bounding_box.x_max,
+        yMax: detection.bounding_box.y_max,
+      },
+    })),
   };
 }

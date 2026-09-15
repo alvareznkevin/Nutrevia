@@ -32,13 +32,18 @@ services:
       JWT_ALGORITHM: ${JWT_ALGORITHM}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      FOOD_DETECTION_MODEL: ${FOOD_DETECTION_MODEL:-yolov8s-world.pt}
+      FOOD_DETECTION_CONFIDENCE: ${FOOD_DETECTION_CONFIDENCE:-0.30}
+      FOOD_DETECTION_IMAGE_SIZE: ${FOOD_DETECTION_IMAGE_SIZE:-640}
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - nutrevia_model_cache:/root/.cache
     depends_on:
       database:
         condition: service_healthy
 
 volumes:
   nutrevia_database_data:
+  nutrevia_model_cache:
