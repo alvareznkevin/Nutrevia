@@ -12,6 +12,8 @@ import {
 import { api } from '@/api';
 import { AccountProfile } from '@/api/types';
 import { AppScreen } from '@/components/app-screen';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { OutlineButton } from '@/components/ui/OutlineButton';
 import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -99,55 +101,37 @@ export default function ProfileScreen() {
     }
   };
 
-
-  if (!profile && !errorMessage) {
+   if (!profile && !errorMessage) {
     return (
-      <ActivityIndicator
-        style={{ flex: 1 }}
-        color={theme.accent}
-      />
+      <AppScreen>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={theme.accent} />
+        </View>
+      </AppScreen>
     );
   }
 
 
   if (!profile) {
     return (
-      <ThemedView
-        style={{
-          flex: 1,
-          padding: Spacing.four,
-          justifyContent: 'center',
-        }}
-      >
-        <ThemedText
-          style={{
-            color: '#ef4444',
-            textAlign: 'center',
-          }}
-        >
-          {errorMessage}
-        </ThemedText>
-
-        <TouchableOpacity
-          onPress={loadProfile}
-          style={{
-            backgroundColor: theme.accent,
-            padding: Spacing.four,
-            borderRadius: Spacing.three,
-            marginTop: Spacing.four,
-          }}
-        >
+      <AppScreen>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
           <ThemedText
             style={{
-              color: '#000',
-              fontWeight: '700',
+              color: '#ef4444',
               textAlign: 'center',
             }}
           >
-            Intentar nuevamente
+            {errorMessage}
           </ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
+
+          <PrimaryButton
+            label="Intentar nuevamente"
+            onPress={loadProfile}
+            style={{ marginTop: Spacing.four }}
+          />
+        </View>
+      </AppScreen>
     );
   }
 
@@ -274,32 +258,13 @@ export default function ProfileScreen() {
         </ThemedText>
       )}
 
-      <TouchableOpacity
+      <OutlineButton
+        label="Cerrar sesión"
+        tone="error"
+        loading={isLoggingOut}
         onPress={handleLogout}
-        disabled={isLoggingOut}
-        style={{
-          borderWidth: 1,
-          borderColor: '#e57373',
-          padding: Spacing.four,
-          borderRadius: Spacing.three,
-          marginTop: Spacing.six,
-          opacity: isLoggingOut ? 0.6 : 1,
-        }}
-      >
-        {isLoggingOut ? (
-          <ActivityIndicator color="#e57373" />
-        ) : (
-          <ThemedText
-            style={{
-              textAlign: 'center',
-              color: '#e57373',
-              fontWeight: '700',
-            }}
-          >
-            Cerrar sesión
-          </ThemedText>
-        )}
-      </TouchableOpacity>
+        style={{ marginTop: Spacing.six }}
+      />
     </AppScreen>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from 'expo-camera';
 
 import { api } from '@/api';
+import { setPendingFoodAnalysis } from '@/api/pendingFoodAnalysisStore';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -113,27 +114,13 @@ export default function CameraScreen() {
     setIsUploading(true);
 
     try {
-      const result =
-        await api.analyzeFoodImage(photoUri);
+      const result = await api.analyzeFoodImage(photoUri);
+      setPendingFoodAnalysis(result);
 
-      const detectionSummary = result.detections.length > 0
-        ? result.detections
-          .map((detection) => (
-            `${detection.name}: ${Math.round(detection.confidence * 100)}%`
-          ))
-          .join('\n')
-        : 'No se encontraron alimentos de la lista inicial.';
-
-      Alert.alert(
-        'Análisis completado',
-        `${result.message}\n\n${detectionSummary}`,
-        [
-          {
-            text: 'Volver al inicio',
-            onPress: () => router.replace('/home'),
-          },
-        ],
-      );
+      router.replace({
+        pathname: '/review-meal',
+        params: { photoUri },
+      });
     } catch (error) {
       Alert.alert(
         'No fue posible enviar la imagen',

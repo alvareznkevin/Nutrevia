@@ -1,7 +1,8 @@
-import { useRef } from 'react';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { View, TouchableOpacity } from 'react-native';
-import { ThemedView } from '@/components/themed-view';
+
+import { AppScreen } from '@/components/app-screen';
+import { BrandMark } from '@/components/brand-mark';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
@@ -12,17 +13,31 @@ export default function BarcodeScanScreen() {
 
   if (!permission?.granted) {
     return (
-      <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.four }}>
-        <ThemedText style={{ marginBottom: Spacing.three, textAlign: 'center' }}>
+      <AppScreen
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <BrandMark centered compact />
+
+        <ThemedText style={{ marginTop: Spacing.four, marginBottom: Spacing.three, textAlign: 'center' }}>
           Necesitamos permiso para usar la cámara
         </ThemedText>
-        <TouchableOpacity onPress={requestPermission} style={{ backgroundColor: theme.accent, padding: Spacing.three, borderRadius: Spacing.two }}>
+
+        <TouchableOpacity
+          onPress={requestPermission}
+          style={{ backgroundColor: theme.accent, padding: Spacing.three, borderRadius: Spacing.two }}
+        >
           <ThemedText style={{ color: '#000' }}>Dar permiso</ThemedText>
         </TouchableOpacity>
-      </ThemedView>
+      </AppScreen>
     );
   }
 
+  // La vista de cámara se mantiene sin AppScreen: necesita ocupar toda la
+  // pantalla sin el padding ni los círculos decorativos de fondo.
   return (
     <View style={{ flex: 1 }}>
       <CameraView

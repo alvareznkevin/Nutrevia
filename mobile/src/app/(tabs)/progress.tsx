@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { router } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { AppScreen } from '@/components/app-screen';
@@ -21,7 +21,13 @@ export default function ProgressScreen() {
   }, []);
 
   if (!history) {
-    return <ActivityIndicator style={{ flex: 1 }} color={theme.accent} />;
+    return (
+      <AppScreen>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={theme.accent} />
+        </View>
+      </AppScreen>
+    );
   }
 
   const change = (history[history.length - 1].weightKg - history[0].weightKg).toFixed(1);

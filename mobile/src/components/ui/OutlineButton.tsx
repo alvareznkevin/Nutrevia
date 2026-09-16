@@ -1,41 +1,39 @@
-import { TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 interface OutlineButtonProps extends TouchableOpacityProps {
   label: string;
-  tone?: 'default' | 'accent';
+  tone?: 'default' | 'accent' | 'error';
   icon?: React.ReactNode;
+  loading?: boolean;
 }
 
-export function OutlineButton({ label, tone = 'default', icon, style, ...rest }: OutlineButtonProps) {
+export function OutlineButton({ label, tone = 'default', icon, loading, disabled, style, ...rest }: OutlineButtonProps) {
   const theme = useTheme();
-  const borderColor = tone === 'accent' ? theme.accent : theme.border;
-  const textColor = tone === 'accent' ? theme.accent : theme.text;
+  const borderColor = tone === 'accent' ? theme.accent : tone === 'error' ? '#e57373' : theme.border;
+  const textColor = tone === 'accent' ? theme.accent : tone === 'error' ? '#e57373' : theme.text;
 
   return (
     <TouchableOpacity
+      disabled={disabled || loading}
       style={[
-        {
-          minHeight: 54,
-          borderWidth: 1,
-          borderColor,
-          paddingHorizontal: Spacing.three,
-          paddingVertical: Spacing.two,
-          borderRadius: 14,
-          justifyContent: 'center',
-        },
+        { borderWidth: 1, borderColor, padding: Spacing.three, borderRadius: Spacing.three, opacity: disabled || loading ? 0.6 : 1 },
         style,
       ]}
       {...rest}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two }}>
-        {icon}
-        <ThemedText style={{ textAlign: 'center', fontWeight: tone === 'accent' ? '700' : '400', color: textColor }}>
-          {label}
-        </ThemedText>
-      </View>
+      {loading ? (
+        <ActivityIndicator color={textColor} />
+      ) : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two }}>
+          {icon}
+          <ThemedText style={{ textAlign: 'center', fontWeight: tone === 'default' ? '400' : '700', color: textColor }}>
+            {label}
+          </ThemedText>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }

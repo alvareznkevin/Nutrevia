@@ -11,6 +11,9 @@ export interface Meal {
   time: string;
   calories: number;
   description: string;
+  proteinGrams?: number;
+  carbGrams?: number;
+  fatGrams?: number;
 }
 
 export interface DailySummary {
@@ -105,10 +108,10 @@ export interface FoodImageResult {
   status: string;
   message: string;
   model: string;
-  detections: DetectedFood[];
+  detections: FoodDetection[];
 }
 
-export interface DetectedFood {
+export interface FoodDetection {
   key: string;
   name: string;
   confidence: number;
@@ -118,4 +121,26 @@ export interface DetectedFood {
     xMax: number;
     yMax: number;
   };
+}
+
+export interface DetectedFood {
+  id: string;
+  key: string;
+  name: string;
+  grams: number;
+  kcal: number;
+  proteinGrams: number;
+  carbGrams: number;
+  fatGrams: number;
+  confidence: 'alta' | 'media' | 'baja';
+  confidenceScore: number;
+}
+
+export interface FoodCatalogItem {
+  id: string;
+  name: string;
+  caloriesPer100g: number;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
 }
