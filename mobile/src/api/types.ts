@@ -14,6 +14,7 @@ export interface Meal {
   proteinGrams?: number;
   carbGrams?: number;
   fatGrams?: number;
+  date?: string; 
 }
 
 export interface DailySummary {
