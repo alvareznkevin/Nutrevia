@@ -5,7 +5,11 @@ import { MoreVertical, Pencil, Trash2 } from 'lucide-react-native';
 
 import { api } from '@/api';
 import { DailySummary } from '@/api/types';
-import { addLocalMeal, getLocalMeals, removeLocalMeal, subscribeToLocalMeals } from '@/api/localDiaryStore';
+import {
+  getLocalMeals,
+  removeLocalMeal,
+  subscribeToLocalMeals,
+} from '@/api/localDiaryStore';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -50,7 +54,13 @@ function MealOptionsMenu({ onDelete }: { onDelete: () => void }) {
         >
           <TouchableOpacity
             onPress={() => setOpen(false)}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.two, paddingHorizontal: Spacing.three }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.two,
+              paddingVertical: Spacing.two,
+              paddingHorizontal: Spacing.three,
+            }}
           >
             <Pencil color={theme.text} size={16} />
             <ThemedText type="small">Editar comida</ThemedText>
@@ -61,10 +71,18 @@ function MealOptionsMenu({ onDelete }: { onDelete: () => void }) {
               setOpen(false);
               onDelete();
             }}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.two, paddingHorizontal: Spacing.three }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.two,
+              paddingVertical: Spacing.two,
+              paddingHorizontal: Spacing.three,
+            }}
           >
             <Trash2 color="#ef4444" size={16} />
-            <ThemedText type="small" style={{ color: '#ef4444' }}>Eliminar comida</ThemedText>
+            <ThemedText type="small" style={{ color: '#ef4444' }}>
+              Eliminar comida
+            </ThemedText>
           </TouchableOpacity>
         </View>
       )}
@@ -88,7 +106,11 @@ export default function DiaryScreen() {
       const result = await api.getDailySummary();
       setSummary(result);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No fue posible cargar el diario.');
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible cargar el diario.',
+      );
     }
   };
 
@@ -108,8 +130,15 @@ export default function DiaryScreen() {
       return;
     }
 
-    // TODO: reemplazar por api.deleteMeal(mealId) cuando el backend tenga el endpoint.
-    setSummary((current) => (current ? { ...current, meals: current.meals.filter((meal) => meal.id !== mealId) } : current));
+    // Pendiente: conectar con un endpoint real para borrar comidas.
+    setSummary((current) =>
+      current
+        ? {
+            ...current,
+            meals: current.meals.filter((meal) => meal.id !== mealId),
+          }
+        : current,
+    );
   };
 
   const isToday = isSameDay(selectedDate, new Date());
@@ -120,14 +149,30 @@ export default function DiaryScreen() {
 
   if (!summary) {
     return (
-      <ThemedView style={{ flex: 1, padding: Spacing.four, justifyContent: 'center' }}>
-        <ThemedText style={{ color: '#ef4444', textAlign: 'center' }}>{errorMessage}</ThemedText>
-        <PrimaryButton label="Intentar nuevamente" onPress={loadSummary} style={{ marginTop: Spacing.four }} />
+      <ThemedView
+        style={{
+          flex: 1,
+          padding: Spacing.four,
+          justifyContent: 'center',
+        }}
+      >
+        <ThemedText style={{ color: '#ef4444', textAlign: 'center' }}>
+          {errorMessage}
+        </ThemedText>
+        <PrimaryButton
+          label="Intentar nuevamente"
+          onPress={loadSummary}
+          style={{ marginTop: Spacing.four }}
+        />
       </ThemedView>
     );
   }
 
-  const localCalories = localMeals.reduce((total, meal) => total + meal.calories, 0);
+  const localCalories = localMeals.reduce(
+    (total, meal) => total + meal.calories,
+    0,
+  );
+
   const localMacros = localMeals.reduce(
     (totals, meal) => ({
       protein: totals.protein + (meal.proteinGrams ?? 0),
@@ -136,8 +181,10 @@ export default function DiaryScreen() {
     }),
     { protein: 0, carbs: 0, fat: 0 },
   );
+
   const combinedMeals = [...summary.meals, ...localMeals];
   const combinedConsumedCalories = summary.consumedCalories + localCalories;
+
   const combinedConsumedMacros = {
     protein: summary.consumedMacros.protein + localMacros.protein,
     carbs: summary.consumedMacros.carbs + localMacros.carbs,
@@ -155,25 +202,47 @@ export default function DiaryScreen() {
       {saved === '1' && (
         <ThemedView
           type="backgroundElement"
-          style={{ borderRadius: Spacing.three, padding: Spacing.three, marginTop: Spacing.three, backgroundColor: theme.accent }}
+          style={{
+            borderRadius: Spacing.three,
+            padding: Spacing.three,
+            marginTop: Spacing.three,
+            backgroundColor: theme.accent,
+          }}
         >
-          <ThemedText style={{ color: '#000', fontWeight: '700', textAlign: 'center' }}>
+          <ThemedText
+            style={{
+              color: '#000',
+              fontWeight: '700',
+              textAlign: 'center',
+            }}
+          >
             ✓ Comida guardada correctamente
           </ThemedText>
         </ThemedView>
       )}
 
       <View style={{ marginTop: Spacing.four }}>
-        <DateNavigator selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+        <DateNavigator
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       </View>
 
       {!isToday ? (
         <ThemedView
           type="backgroundElement"
-          style={{ borderRadius: Spacing.three, padding: Spacing.four, marginTop: Spacing.four }}
+          style={{
+            borderRadius: Spacing.three,
+            padding: Spacing.four,
+            marginTop: Spacing.four,
+          }}
         >
-          <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
-            La consulta de días anteriores estará disponible cuando el historial de comidas se encuentre conectado.
+          <ThemedText
+            themeColor="textSecondary"
+            style={{ textAlign: 'center' }}
+          >
+            La consulta de días anteriores estará disponible cuando el
+            historial de comidas se encuentre conectado.
           </ThemedText>
         </ThemedView>
       ) : (
@@ -190,34 +259,73 @@ export default function DiaryScreen() {
           >
             <ThemedText>Resumen del día — {summary.date}</ThemedText>
 
-            <ThemedText style={{ fontSize: 34, lineHeight: 42, fontWeight: '700', marginTop: Spacing.two }}>
+            <ThemedText
+              style={{
+                fontSize: 34,
+                lineHeight: 42,
+                fontWeight: '700',
+                marginTop: Spacing.two,
+              }}
+            >
               {combinedConsumedCalories} / {summary.goal.calories} kcal
             </ThemedText>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.three }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginTop: Spacing.three,
+              }}
+            >
               <View>
-                <ThemedText themeColor="accent" type="small">Proteínas</ThemedText>
-                <ThemedText type="small">{combinedConsumedMacros.protein} / {summary.goal.protein} g</ThemedText>
+                <ThemedText themeColor="accent" type="small">
+                  Proteínas
+                </ThemedText>
+                <ThemedText type="small">
+                  {combinedConsumedMacros.protein} / {summary.goal.protein} g
+                </ThemedText>
               </View>
+
               <View>
-                <ThemedText themeColor="accent" type="small">Carbohidratos</ThemedText>
-                <ThemedText type="small">{combinedConsumedMacros.carbs} / {summary.goal.carbs} g</ThemedText>
+                <ThemedText themeColor="accent" type="small">
+                  Carbohidratos
+                </ThemedText>
+                <ThemedText type="small">
+                  {combinedConsumedMacros.carbs} / {summary.goal.carbs} g
+                </ThemedText>
               </View>
+
               <View>
-                <ThemedText themeColor="accent" type="small">Grasas</ThemedText>
-                <ThemedText type="small">{combinedConsumedMacros.fat} / {summary.goal.fat} g</ThemedText>
+                <ThemedText themeColor="accent" type="small">
+                  Grasas
+                </ThemedText>
+                <ThemedText type="small">
+                  {combinedConsumedMacros.fat} / {summary.goal.fat} g
+                </ThemedText>
               </View>
             </View>
           </ThemedView>
 
-          <ThemedText type="smallBold" style={{ marginTop: Spacing.four }}>Comidas registradas</ThemedText>
+          <ThemedText
+            type="smallBold"
+            style={{ marginTop: Spacing.four }}
+          >
+            Comidas registradas
+          </ThemedText>
 
           {combinedMeals.length === 0 ? (
             <ThemedView
               type="backgroundElement"
-              style={{ borderRadius: Spacing.three, padding: Spacing.four, marginTop: Spacing.two }}
+              style={{
+                borderRadius: Spacing.three,
+                padding: Spacing.four,
+                marginTop: Spacing.two,
+              }}
             >
-              <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
+              <ThemedText
+                themeColor="textSecondary"
+                style={{ textAlign: 'center' }}
+              >
                 Todavía no has registrado comidas hoy.
               </ThemedText>
             </ThemedView>
@@ -226,16 +334,58 @@ export default function DiaryScreen() {
               <ThemedView
                 key={meal.id}
                 type="backgroundElement"
-                style={{ borderRadius: Spacing.three, padding: Spacing.three, marginTop: Spacing.two, flexDirection: 'row', justifyContent: 'space-between' }}
+                style={{
+                  borderRadius: Spacing.three,
+                  padding: Spacing.three,
+                  marginTop: Spacing.two,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}
               >
-                <View>
-                  <ThemedText type="smallBold" style={{ textTransform: 'capitalize' }}>{meal.type}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">{meal.time} · {meal.description}</ThemedText>
+                <View
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    paddingRight: Spacing.two,
+                  }}
+                >
+                  <ThemedText
+                    type="smallBold"
+                    style={{ textTransform: 'capitalize' }}
+                  >
+                    {meal.type}
+                  </ThemedText>
+
+                  <ThemedText
+                    type="small"
+                    themeColor="textSecondary"
+                  >
+                    {meal.time}
+                  </ThemedText>
+
+                  <ThemedText
+                    type="small"
+                    themeColor="textSecondary"
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                  >
+                    {meal.description}
+                  </ThemedText>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-                  <ThemedText type="smallBold">{meal.calories} kcal</ThemedText>
-                  <MealOptionsMenu onDelete={() => handleDeleteMeal(meal.id)} />
+                <View
+                  style={{
+                    alignItems: 'flex-end',
+                    justifyContent: 'center',
+                    gap: Spacing.one,
+                  }}
+                >
+                  <ThemedText type="smallBold">
+                    {meal.calories} kcal
+                  </ThemedText>
+                  <MealOptionsMenu
+                    onDelete={() => handleDeleteMeal(meal.id)}
+                  />
                 </View>
               </ThemedView>
             ))

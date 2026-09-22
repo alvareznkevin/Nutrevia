@@ -574,3 +574,26 @@ export async function analyzeFoodImage(
     })),
   };
 }
+
+export interface BarcodeFood {
+  barcode: string;
+  name: string;
+  brand: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+}
+
+export async function getFoodByBarcode(code: string): Promise<BarcodeFood> {
+  const response = await fetch(
+    `${getApiUrl()}/foods/barcode/${encodeURIComponent(code)}`,
+    { headers: { Accept: 'application/json' } },
+  );
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response));
+  }
+
+  return response.json();
+}
