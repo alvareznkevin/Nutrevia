@@ -19,6 +19,14 @@ import { useTheme } from '@/hooks/use-theme';
 
 const MEAL_TYPES: Meal['type'][] = ['desayuno', 'almuerzo', 'cena', 'snack'];
 
+const smallInputStyle = {
+  borderWidth: 1,
+  borderRadius: Spacing.two,
+  paddingHorizontal: Spacing.two,
+  paddingVertical: Spacing.one,
+  width: 60,
+};
+
 export default function ReviewMealScreen() {
   const theme = useTheme();
   const { photoUri } = useLocalSearchParams<{ photoUri: string }>();
@@ -36,9 +44,29 @@ export default function ReviewMealScreen() {
 
   const updateGrams = (id: string, grams: number) => {
     setFoods((current) =>
-      current.map((food) => (
-        food.id === id ? recalculateDetectedFood(food, grams) : food
-      )),
+      current.map((food) => {
+        if (food.id !== id) return food;
+
+        if (food.key === 'custom') {
+          // Los alimentos agregados a mano no tienen tabla nutricional asociada;
+          // solo actualizamos los gramos, sin recalcular kcal/macros.
+          return { ...food, grams };
+        }
+
+        return recalculateDetectedFood(food, grams);
+      }),
+    );
+  };
+
+  const updateCustomFoodField = (
+    id: string,
+    field: 'kcal' | 'proteinGrams' | 'carbGrams' | 'fatGrams',
+    value: string,
+  ) => {
+    const parsed = Number(value.replace(/[^0-9]/g, '')) || 0;
+
+    setFoods((current) =>
+      current.map((food) => (food.id === id ? { ...food, [field]: parsed } : food)),
     );
   };
 
@@ -145,39 +173,102 @@ export default function ReviewMealScreen() {
             </TouchableOpacity>
           </View>
 
-          {foods.map((food) => (
-            <Card key={food.id} style={{ marginTop: Spacing.two }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <ThemedText type="smallBold">{food.name}</ThemedText>
-                <TouchableOpacity onPress={() => removeFood(food.id)} hitSlop={8}>
-                  <Trash2 color="#ef4444" size={18} />
-                </TouchableOpacity>
-              </View>
+          {foods.map((food) => {
+            const hasNoNutritionData = food.kcal === 0 && food.confidenceScore > 0;
+            const isCustom = food.key === 'custom';
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginTop: Spacing.two }}>
-                <TextInput
-                  value={String(food.grams)}
-                  onChangeText={(value) => updateGrams(food.id, Number(value.replace(/[^0-9]/g, '')) || 0)}
-                  keyboardType="numeric"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                    borderRadius: Spacing.two,
-                    paddingHorizontal: Spacing.two,
-                    paddingVertical: Spacing.one,
-                    color: theme.text,
-                    width: 70,
-                  }}
-                />
-                <ThemedText type="small" themeColor="textSecondary">g</ThemedText>
-                <ThemedText type="small">{food.kcal} kcal</ThemedText>
-                <Badge
-                  label={`Confianza ${food.confidence}`}
-                  tone={food.confidence === 'alta' ? 'accent' : 'neutral'}
-                />
-              </View>
-            </Card>
-          ))}
+            return (
+              <Card key={food.id} style={{ marginTop: Spacing.two }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <ThemedText type="smallBold">{food.name}</ThemedText>
+                  <TouchableOpacity onPress={() => removeFood(food.id)} hitSlop={8}>
+                    <Trash2 color="#ef4444" size={18} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginTop: Spacing.two, flexWrap: 'wrap' }}>
+                  <TextInput
+                    value={String(food.grams)}
+                    onChangeText={(value) => updateGrams(food.id, Number(value.replace(/[^0-9]/g, '')) || 0)}
+                    keyboardType="numeric"
+                    style={{
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      borderRadius: Spacing.two,
+                      paddingHorizontal: Spacing.two,
+                      paddingVertical: Spacing.one,
+                      color: theme.text,
+                      width: 70,
+                    }}
+                  />
+                  <ThemedText type="small" themeColor="textSecondary">g</ThemedText>
+
+                  {isCustom ? (
+                    <>
+                      <TextInput
+                        value={String(food.kcal)}
+                        onChangeText={(value) => updateCustomFoodField(food.id, 'kcal', value)}
+                        keyboardType="numeric"
+                        style={{ ...smallInputStyle, borderColor: theme.accent, color: theme.text }}
+                      />
+                      <ThemedText type="small" themeColor="textSecondary">kcal</ThemedText>
+                    </>
+                  ) : (
+                    <ThemedText type="small">{food.kcal} kcal</ThemedText>
+                  )}
+
+                  <Badge
+                    label={`Confianza ${food.confidence}`}
+                    tone={food.confidence === 'alta' ? 'accent' : 'neutral'}
+                  />
+
+                  {hasNoNutritionData && (
+                    <Badge label="Sin datos nutricionales" tone="neutral" />
+                  )}
+                </View>
+
+                {isCustom && (
+                  <View style={{ flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.two, flexWrap: 'wrap' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.one }}>
+                      <ThemedText type="small" themeColor="textSecondary">Prot.</ThemedText>
+                      <TextInput
+                        value={String(food.proteinGrams)}
+                        onChangeText={(value) => updateCustomFoodField(food.id, 'proteinGrams', value)}
+                        keyboardType="numeric"
+                        style={{ ...smallInputStyle, borderColor: theme.border, color: theme.text }}
+                      />
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.one }}>
+                      <ThemedText type="small" themeColor="textSecondary">Carb.</ThemedText>
+                      <TextInput
+                        value={String(food.carbGrams)}
+                        onChangeText={(value) => updateCustomFoodField(food.id, 'carbGrams', value)}
+                        keyboardType="numeric"
+                        style={{ ...smallInputStyle, borderColor: theme.border, color: theme.text }}
+                      />
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.one }}>
+                      <ThemedText type="small" themeColor="textSecondary">Grasa</ThemedText>
+                      <TextInput
+                        value={String(food.fatGrams)}
+                        onChangeText={(value) => updateCustomFoodField(food.id, 'fatGrams', value)}
+                        keyboardType="numeric"
+                        style={{ ...smallInputStyle, borderColor: theme.border, color: theme.text }}
+                      />
+                    </View>
+                  </View>
+                )}
+
+                {hasNoNutritionData && (
+                  <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.one }}>
+                    Detectamos este alimento, pero aún no tenemos su información nutricional. Puedes eliminarlo o dejarlo con 0 kcal.
+                  </ThemedText>
+                )}
+              </Card>
+            );
+          })}
 
           {foods.length === 0 && (
             <Card style={{ marginTop: Spacing.two }}>
