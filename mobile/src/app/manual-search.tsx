@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
-import { TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { Search } from 'lucide-react-native';
 
-import { mockFoodCatalog } from '@/api/mockData';
+import { searchFoods } from '@/api/foodApi';
 import { FoodCatalogItem, Meal } from '@/api/types';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
@@ -28,19 +28,45 @@ export default function ManualSearchScreen() {
   const theme = useTheme();
 
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState<FoodCatalogItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [selectedFood, setSelectedFood] = useState<FoodCatalogItem | null>(null);
   const [grams, setGrams] = useState('100');
   const [portionId, setPortionId] = useState<string>('custom');
   const [mealType, setMealType] = useState<Meal['type']>('almuerzo');
   const [isSaving, setIsSaving] = useState(false);
 
-  const results = useMemo(() => {
-    if (!query.trim()) return [];
+  useEffect(() => {
+    const trimmedQuery = query.trim();
 
-    const normalizedQuery = query.trim().toLowerCase();
-    // TODO: reemplazar por una búsqueda contra el backend cuando exista una fuente
-    // de información nutricional real, en vez del catálogo local de ejemplo.
-    return mockFoodCatalog.filter((food) => food.name.toLowerCase().includes(normalizedQuery));
+    if (!trimmedQuery) {
+      setResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+
+    // Debounce: espera 400ms desde la última letra escrita antes de buscar,
+    // para no disparar una llamada a la API por cada tecla presionada.
+    const timeout = setTimeout(async () => {
+      try {
+        const foods = await searchFoods(trimmedQuery);
+        setResults(foods);
+      } catch (error) {
+        setSearchError(
+          error instanceof Error ? error.message : 'No fue posible buscar alimentos.',
+        );
+        setResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timeout);
   }, [query]);
 
   const selectPortion = (preset: (typeof PORTION_PRESETS)[number]) => {
@@ -70,9 +96,6 @@ export default function ManualSearchScreen() {
     setIsSaving(true);
 
     try {
-      // TODO: reemplazar por api.addMeal(...) cuando el backend tenga el endpoint
-      // para guardar comidas individuales en el diario. Por ahora se guarda
-      // solo en memoria local (localDiaryStore) para esta sesión.
       addLocalMeal({
         id: Date.now().toString(),
         type: mealType,
@@ -245,7 +268,17 @@ export default function ManualSearchScreen() {
         />
       </View>
 
-      {query.trim().length > 0 && results.length === 0 && (
+      {isSearching && (
+        <ActivityIndicator style={{ marginTop: Spacing.four }} color={theme.accent} />
+      )}
+
+      {searchError && (
+        <Card style={{ marginTop: Spacing.four }}>
+          <ThemedText style={{ color: '#ef4444', textAlign: 'center' }}>{searchError}</ThemedText>
+        </Card>
+      )}
+
+      {!isSearching && !searchError && query.trim().length > 0 && results.length === 0 && (
         <Card style={{ marginTop: Spacing.four }}>
           <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
             No encontramos alimentos con ese nombre.
@@ -253,7 +286,7 @@ export default function ManualSearchScreen() {
         </Card>
       )}
 
-      {results.map((food) => (
+      {!isSearching && results.map((food) => (
         <TouchableOpacity key={food.id} onPress={() => setSelectedFood(food)}>
           <Card style={{ marginTop: Spacing.two, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <ThemedText type="smallBold">{food.name}</ThemedText>
@@ -261,8 +294,6 @@ export default function ManualSearchScreen() {
           </Card>
         </TouchableOpacity>
       ))}
-
-      {/* TODO: conectar con el endpoint de búsqueda de alimentos del backend cuando exista */}
     </AppScreen>
   );
 }
