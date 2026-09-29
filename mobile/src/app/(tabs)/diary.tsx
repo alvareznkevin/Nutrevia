@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { MoreVertical, Trash2 } from 'lucide-react-native';
 
 import { api } from '@/api';
 import { DailySummary } from '@/api/types';
-import { getLocalMeals, removeLocalMeal, subscribeToLocalMeals, toDateKey } from '@/api/localDiaryStore';
+import { toLocalDateKey } from '@/api/weightDate';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -53,14 +53,6 @@ function MealOptionsMenu({ onDelete }: { onDelete: () => void }) {
           }}
         >
           <TouchableOpacity
-            onPress={() => setOpen(false)}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.two, paddingHorizontal: Spacing.three }}
-          >
-            <Pencil color={theme.text} size={16} />
-            <ThemedText type="small">Editar comida</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             onPress={() => {
               setOpen(false);
               onDelete();
@@ -82,43 +74,35 @@ export default function DiaryScreen() {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [allLocalMeals, setAllLocalMeals] = useState(() => getLocalMeals());
   const { saved } = useLocalSearchParams<{ saved?: string }>();
+  const selectedDateKey = toLocalDateKey(selectedDate);
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     setErrorMessage(null);
 
     try {
-      const result = await api.getDailySummary();
+      const result = await api.getDailySummary(selectedDateKey);
       setSummary(result);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'No fue posible cargar el diario.');
     }
-  };
+  }, [selectedDateKey]);
 
-  useEffect(() => {
-    loadSummary();
-  }, []);
+  useFocusEffect(useCallback(() => {
+    setSummary(null);
+    void loadSummary();
+  }, [loadSummary]));
 
-  useEffect(() => {
-    return subscribeToLocalMeals(() => setAllLocalMeals(getLocalMeals()));
-  }, []);
-
-  const handleDeleteMeal = (mealId: string) => {
-    const isLocal = allLocalMeals.some((meal) => meal.id === mealId);
-
-    if (isLocal) {
-      removeLocalMeal(mealId);
-      return;
+  const handleDeleteMeal = async (mealId: string) => {
+    try {
+      await api.deleteMeal(mealId);
+      await loadSummary();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'No fue posible eliminar la comida.');
     }
-
-    // TODO: reemplazar por api.deleteMeal(mealId) cuando el backend tenga el endpoint.
-    setSummary((current) => (current ? { ...current, meals: current.meals.filter((meal) => meal.id !== mealId) } : current));
   };
 
   const isToday = isSameDay(selectedDate, new Date());
-  const selectedDateKey = toDateKey(selectedDate);
-  const localMealsForSelectedDate = allLocalMeals.filter((meal) => meal.date === selectedDateKey);
 
   if (!summary && !errorMessage) {
     return <ActivityIndicator style={{ flex: 1 }} color={theme.accent} />;
@@ -132,26 +116,6 @@ export default function DiaryScreen() {
       </ThemedView>
     );
   }
-
-  const localCaloriesForDate = localMealsForSelectedDate.reduce((total, meal) => total + meal.calories, 0);
-  const localMacrosForDate = localMealsForSelectedDate.reduce(
-    (totals, meal) => ({
-      protein: totals.protein + (meal.proteinGrams ?? 0),
-      carbs: totals.carbs + (meal.carbGrams ?? 0),
-      fat: totals.fat + (meal.fatGrams ?? 0),
-    }),
-    { protein: 0, carbs: 0, fat: 0 },
-  );
-
-  const combinedMeals = isToday ? [...summary.meals, ...localMealsForSelectedDate] : localMealsForSelectedDate;
-  const combinedConsumedCalories = isToday ? summary.consumedCalories + localCaloriesForDate : localCaloriesForDate;
-  const combinedConsumedMacros = isToday
-    ? {
-        protein: summary.consumedMacros.protein + localMacrosForDate.protein,
-        carbs: summary.consumedMacros.carbs + localMacrosForDate.carbs,
-        fat: summary.consumedMacros.fat + localMacrosForDate.fat,
-      }
-    : localMacrosForDate;
 
   return (
     <AppScreen scroll>
@@ -171,21 +135,11 @@ export default function DiaryScreen() {
           </ThemedText>
         </ThemedView>
       )}
+      {errorMessage && <ThemedText style={{ color: '#ef4444', marginTop: Spacing.two }}>{errorMessage}</ThemedText>}
 
       <View style={{ marginTop: Spacing.four }}>
         <DateNavigator selectedDate={selectedDate} onSelectDate={setSelectedDate} />
       </View>
-
-      {!isToday && (
-        <ThemedView
-          type="backgroundElement"
-          style={{ borderRadius: Spacing.three, padding: Spacing.three, marginTop: Spacing.three }}
-        >
-          <ThemedText themeColor="textSecondary" type="small" style={{ textAlign: 'center' }}>
-            Solo se muestran las comidas registradas en este dispositivo para este día. El historial completo desde el servidor aún no está disponible.
-          </ThemedText>
-        </ThemedView>
-      )}
 
       <ThemedView
         type="backgroundElement"
@@ -200,38 +154,38 @@ export default function DiaryScreen() {
         <ThemedText>Resumen del día — {formatSelectedDate(selectedDate)}</ThemedText>
 
         <ThemedText style={{ fontSize: 34, lineHeight: 42, fontWeight: '700', marginTop: Spacing.two }}>
-          {combinedConsumedCalories} / {summary.goal.calories} kcal
+          {summary.consumedCalories} / {summary.goal.calories} kcal
         </ThemedText>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.three }}>
           <View>
             <ThemedText themeColor="accent" type="small">Proteínas</ThemedText>
-            <ThemedText type="small">{combinedConsumedMacros.protein} / {summary.goal.protein} g</ThemedText>
+            <ThemedText type="small">{summary.consumedMacros.protein} / {summary.goal.protein} g</ThemedText>
           </View>
           <View>
             <ThemedText themeColor="accent" type="small">Carbohidratos</ThemedText>
-            <ThemedText type="small">{combinedConsumedMacros.carbs} / {summary.goal.carbs} g</ThemedText>
+            <ThemedText type="small">{summary.consumedMacros.carbs} / {summary.goal.carbs} g</ThemedText>
           </View>
           <View>
             <ThemedText themeColor="accent" type="small">Grasas</ThemedText>
-            <ThemedText type="small">{combinedConsumedMacros.fat} / {summary.goal.fat} g</ThemedText>
+            <ThemedText type="small">{summary.consumedMacros.fat} / {summary.goal.fat} g</ThemedText>
           </View>
         </View>
       </ThemedView>
 
       <ThemedText type="smallBold" style={{ marginTop: Spacing.four }}>Comidas registradas</ThemedText>
 
-      {combinedMeals.length === 0 ? (
+      {summary.meals.length === 0 ? (
         <ThemedView
           type="backgroundElement"
           style={{ borderRadius: Spacing.three, padding: Spacing.four, marginTop: Spacing.two }}
         >
           <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
-            {isToday ? 'Todavía no has registrado comidas hoy.' : 'No hay comidas registradas en este dispositivo para este día.'}
+            Todavía no hay comidas registradas para este día.
           </ThemedText>
         </ThemedView>
       ) : (
-        combinedMeals.map((meal) => (
+        summary.meals.map((meal) => (
           <ThemedView
             key={meal.id}
             type="backgroundElement"

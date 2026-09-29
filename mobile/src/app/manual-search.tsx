@@ -3,13 +3,13 @@ import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-nati
 import { router } from 'expo-router';
 import { Search } from 'lucide-react-native';
 
-import { searchFoods } from '@/api/foodApi';
+import { api } from '@/api';
 import { FoodCatalogItem, Meal } from '@/api/types';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
 import { Card } from '@/components/ui/Card';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { addLocalMeal } from '@/api/localDiaryStore';
+import { toLocalDateKey } from '@/api/weightDate';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -36,11 +36,12 @@ export default function ManualSearchScreen() {
   const [portionId, setPortionId] = useState<string>('custom');
   const [mealType, setMealType] = useState<Meal['type']>('almuerzo');
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const trimmedQuery = query.trim();
 
-    if (!trimmedQuery) {
+    if (trimmedQuery.length < 2) {
       setResults([]);
       setSearchError(null);
       setIsSearching(false);
@@ -52,21 +53,22 @@ export default function ManualSearchScreen() {
 
     // Debounce: espera 400ms desde la última letra escrita antes de buscar,
     // para no disparar una llamada a la API por cada tecla presionada.
+    let cancelled = false;
     const timeout = setTimeout(async () => {
       try {
-        const foods = await searchFoods(trimmedQuery);
-        setResults(foods);
+        const foods = await api.searchFoods(trimmedQuery);
+        if (!cancelled) setResults(foods);
       } catch (error) {
-        setSearchError(
+        if (!cancelled) setSearchError(
           error instanceof Error ? error.message : 'No fue posible buscar alimentos.',
         );
-        setResults([]);
+        if (!cancelled) setResults([]);
       } finally {
-        setIsSearching(false);
+        if (!cancelled) setIsSearching(false);
       }
     }, 400);
 
-    return () => clearTimeout(timeout);
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [query]);
 
   const selectPortion = (preset: (typeof PORTION_PRESETS)[number]) => {
@@ -91,23 +93,22 @@ export default function ManualSearchScreen() {
     : null;
 
   const handleSave = async () => {
-    if (!selectedFood || !totals) return;
+    if (!selectedFood || !totals || parsedGrams <= 0 || parsedGrams > 10000) return;
 
     setIsSaving(true);
 
     try {
-      addLocalMeal({
-        id: Date.now().toString(),
-        type: mealType,
-        time: new Intl.DateTimeFormat('es-CL', { hour: '2-digit', minute: '2-digit' }).format(new Date()),
-        calories: totals.kcal,
-        description: `${selectedFood.name} (${parsedGrams} g)`,
-        proteinGrams: totals.protein,
-        carbGrams: totals.carbs,
-        fatGrams: totals.fat,
+      setSaveError(null);
+      await api.createMeal({
+        recordedOn: toLocalDateKey(),
+        mealType,
+        source: 'manual',
+        items: [{ barcode: selectedFood.id, grams: parsedGrams }],
       });
 
       router.replace({ pathname: '/(tabs)/diary', params: { saved: '1' } });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'No fue posible guardar la comida.');
     } finally {
       setIsSaving(false);
     }
@@ -219,9 +220,11 @@ export default function ManualSearchScreen() {
         <PrimaryButton
           label="Confirmar y registrar"
           loading={isSaving}
+          disabled={parsedGrams <= 0 || parsedGrams > 10000}
           onPress={handleSave}
           style={{ marginTop: Spacing.four }}
         />
+        {saveError && <ThemedText style={{ color: '#ef4444', marginTop: Spacing.two }}>{saveError}</ThemedText>}
 
         <TouchableOpacity
           onPress={() => {

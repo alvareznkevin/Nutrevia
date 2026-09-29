@@ -25,6 +25,24 @@ export interface DailySummary {
   meals: Meal[];
 }
 
+export interface MealItemInput {
+  barcode?: string;
+  detectionKey?: string;
+  name?: string;
+  grams: number;
+  caloriesPer100g?: number;
+  proteinPer100g?: number;
+  carbsPer100g?: number;
+  fatPer100g?: number;
+}
+
+export interface CreateMealInput {
+  recordedOn: string;
+  mealType: Meal['type'];
+  source: 'manual' | 'barcode' | 'photo';
+  items: MealItemInput[];
+}
+
 export interface WeightEntry {
   id: number;
   recordedOn: string;

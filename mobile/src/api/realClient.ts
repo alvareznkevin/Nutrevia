@@ -6,13 +6,16 @@ import {
   AuthCredentials,
   AuthResponse,
   AuthUser,
+  CreateMealInput,
   DailySummary,
+  FoodCatalogItem,
   FoodImageResult,
   GoalType,
   NutritionGoalResult,
   ProfileInput,
   ProfileResult,
   WeightEntry,
+  Meal,
 } from './types';
 
 import {
@@ -146,6 +149,32 @@ function mapNutritionGoal(
     carbohydrateGrams: goal.carbohydrate_grams,
     fatGrams: goal.fat_grams,
   };
+}
+
+interface BackendMeal {
+  id: number;
+  recorded_on: string;
+  meal_type: Meal['type'];
+  source: string;
+  description: string;
+  calories: number;
+  protein_grams: number;
+  carb_grams: number;
+  fat_grams: number;
+  created_at: string;
+}
+
+interface BackendDailySummary {
+  date: string;
+  consumed_calories: number;
+  consumed_protein: number;
+  consumed_carbs: number;
+  consumed_fat: number;
+  goal_calories: number;
+  goal_protein: number;
+  goal_carbs: number;
+  goal_fat: number;
+  meals: BackendMeal[];
 }
 
 function mapWeightEntry(entry: BackendWeightEntry): WeightEntry {
@@ -438,6 +467,20 @@ export async function getNutritionGoal(): Promise<NutritionGoalResult> {
   return mapNutritionGoal(result);
 }
 
+function mapMeal(entry: BackendMeal): Meal {
+  return {
+    id: String(entry.id),
+    date: entry.recorded_on,
+    type: entry.meal_type,
+    time: new Intl.DateTimeFormat('es-CL', { hour: '2-digit', minute: '2-digit' }).format(new Date(entry.created_at)),
+    calories: entry.calories,
+    description: entry.description,
+    proteinGrams: entry.protein_grams,
+    carbGrams: entry.carb_grams,
+    fatGrams: entry.fat_grams,
+  };
+}
+
 export async function getWeightHistory(): Promise<WeightEntry[]> {
   const token = await getAccessToken();
 
@@ -508,27 +551,87 @@ export async function deleteWeightEntry(entryId: number): Promise<void> {
 }
 
 
-export async function getDailySummary(): Promise<DailySummary> {
-  const goal = await getNutritionGoal();
-
+export async function getDailySummary(date: string): Promise<DailySummary> {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Debes iniciar sesión nuevamente.');
+  const response = await fetch(`${getApiUrl()}/meals/summary?date=${encodeURIComponent(date)}`, {
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const data: BackendDailySummary = await response.json();
   return {
-    date: new Intl.DateTimeFormat('es-CL').format(
-      new Date(),
-    ),
-    consumedCalories: 0,
+    date: data.date,
+    consumedCalories: data.consumed_calories,
     goal: {
-      calories: goal.dailyCalories,
-      protein: goal.proteinGrams,
-      carbs: goal.carbohydrateGrams,
-      fat: goal.fatGrams,
+      calories: data.goal_calories,
+      protein: data.goal_protein,
+      carbs: data.goal_carbs,
+      fat: data.goal_fat,
     },
     consumedMacros: {
-      protein: 0,
-      carbs: 0,
-      fat: 0,
+      protein: data.consumed_protein,
+      carbs: data.consumed_carbs,
+      fat: data.consumed_fat,
     },
-    meals: [],
+    meals: data.meals.map(mapMeal),
   };
+}
+
+export async function createMeal(data: CreateMealInput): Promise<Meal> {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Debes iniciar sesión nuevamente.');
+  const response = await fetch(`${getApiUrl()}/meals`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      recorded_on: data.recordedOn,
+      meal_type: data.mealType,
+      source: data.source,
+      items: data.items.map((item) => ({
+        barcode: item.barcode,
+        detection_key: item.detectionKey,
+        name: item.name,
+        grams: item.grams,
+        calories_per_100g: item.caloriesPer100g,
+        protein_per_100g: item.proteinPer100g,
+        carbs_per_100g: item.carbsPer100g,
+        fat_per_100g: item.fatPer100g,
+      })),
+    }),
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  return mapMeal(await response.json());
+}
+
+export async function deleteMeal(mealId: string): Promise<void> {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Debes iniciar sesión nuevamente.');
+  const response = await fetch(`${getApiUrl()}/meals/${encodeURIComponent(mealId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+}
+
+export async function searchFoods(query: string): Promise<FoodCatalogItem[]> {
+  const response = await fetch(`${getApiUrl()}/foods/search?q=${encodeURIComponent(query.trim())}`);
+  if (!response.ok) throw new Error(await getErrorMessage(response));
+  const products: Array<{
+    barcode: string; name: string; calories_per_100g: number;
+    protein_per_100g: number; carbs_per_100g: number; fat_per_100g: number;
+  }> = await response.json();
+  return products.map((product) => ({
+    id: product.barcode,
+    name: product.name,
+    caloriesPer100g: product.calories_per_100g,
+    proteinPer100g: product.protein_per_100g,
+    carbsPer100g: product.carbs_per_100g,
+    fatPer100g: product.fat_per_100g,
+  }));
 }
 
 

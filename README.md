@@ -92,7 +92,7 @@ npx tsc --noEmit
 npx expo start --clear
 ```
 
-Escanear el código QR con Expo Go.
+Abrir el código QR con el development client de Nutrevia.
 
 ## Prueba rápida
 
@@ -101,6 +101,10 @@ Escanear el código QR con Expo Go.
 3. Revisar los datos en Inicio, Diario y Perfil.
 4. Tomar una fotografía y comprobar que el backend la recibe.
 5. Cerrar y abrir la aplicación para verificar que la sesión se conserva.
+6. Buscar un alimento por nombre, registrar una porción y comprobar que aparece
+   en el diario después de reiniciar la aplicación.
+7. Registrar otra comida con código de barras o fotografía y comprobar que los
+   totales del día se actualizan.
 
 ## Problemas frecuentes
 
@@ -125,6 +129,19 @@ el resultado con mayor confianza para evitar duplicados.
 Esta primera versión detecta alimentos, pero todavía no calcula gramos ni
 calorías automáticamente. La persona debe confirmar el resultado y la porción
 antes de incorporarlo al diario.
+
+## Búsqueda y diario nutricional
+
+La aplicación consulta `GET /foods/search?q=...` para buscar productos de
+Open Food Facts mediante el backend. El código de barras sigue usando
+`GET /foods/barcode/{code}`. Para registrar una comida, la app envía la fecha,
+el tipo, la fuente y las porciones a `POST /meals`. El backend calcula los
+totales y los guarda por usuario en PostgreSQL.
+
+`GET /meals/summary?date=AAAA-MM-DD` devuelve las comidas y el resumen del
+día. `DELETE /meals/{id}` elimina una comida del usuario autenticado. Tras
+actualizar esta rama, ejecutar `docker compose exec backend alembic upgrade head`
+para crear la tabla `meal_entries`.
 
 ## Importante
 

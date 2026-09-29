@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Camera, Barcode, Search } from 'lucide-react-native';
 
 import { api } from '@/api';
+import { toLocalDateKey } from '@/api/weightDate';
 import { DailySummary } from '@/api/types';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
@@ -23,22 +24,20 @@ export default function HomeScreen() {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     setErrorMessage(null);
 
     try {
-      const result = await api.getDailySummary();
+      const result = await api.getDailySummary(toLocalDateKey());
       setSummary(result);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'No fue posible cargar el resumen.',
       );
     }
-  };
-
-  useEffect(() => {
-    loadSummary();
   }, []);
+
+  useFocusEffect(useCallback(() => { void loadSummary(); }, [loadSummary]));
 
   if (!summary && !errorMessage) {
     return (

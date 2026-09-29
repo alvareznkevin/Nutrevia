@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Plus, Trash2 } from 'lucide-react-native';
 
 import { DetectedFood, Meal } from '@/api/types';
+import { api } from '@/api';
+import { toLocalDateKey } from '@/api/weightDate';
 import { detectionToEditableFood, recalculateDetectedFood } from '@/api/detectedFoodNutrition';
 import { clearPendingFoodAnalysis, getPendingFoodAnalysis } from '@/api/pendingFoodAnalysisStore';
 import { AppScreen } from '@/components/app-screen';
@@ -12,12 +14,12 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { OutlineButton } from '@/components/ui/OutlineButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { addLocalMeal } from '@/api/localDiaryStore';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const MEAL_TYPES: Meal['type'][] = ['desayuno', 'almuerzo', 'cena', 'snack'];
+const KNOWN_DETECTIONS = new Set(['rice', 'pasta', 'chicken', 'potato', 'tomato', 'egg']);
 
 const smallInputStyle = {
   borderWidth: 1,
@@ -35,6 +37,7 @@ export default function ReviewMealScreen() {
   const [foods, setFoods] = useState<DetectedFood[]>([]);
   const [mealType, setMealType] = useState<Meal['type']>('almuerzo');
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const analysis = getPendingFoodAnalysis();
@@ -103,22 +106,31 @@ export default function ReviewMealScreen() {
   );
 
   const handleSave = async () => {
+    if (foods.length === 0 || foods.some((food) => food.grams <= 0)) return;
     setIsSaving(true);
-
+    setSaveError(null);
     try {
-      addLocalMeal({
-        id: Date.now().toString(),
-        type: mealType,
-        time: new Intl.DateTimeFormat('es-CL', { hour: '2-digit', minute: '2-digit' }).format(new Date()),
-        calories: totals.kcal,
-        description: foods.map((food) => food.name).join(', '),
-        proteinGrams: totals.protein,
-        carbGrams: totals.carbs,
-        fatGrams: totals.fat,
+      await api.createMeal({
+        recordedOn: toLocalDateKey(),
+        mealType,
+        source: 'photo',
+        items: foods.map((food) => ({
+          name: food.name,
+          grams: food.grams,
+          detectionKey: KNOWN_DETECTIONS.has(food.key) ? food.key : undefined,
+          ...(KNOWN_DETECTIONS.has(food.key) ? {} : {
+            caloriesPer100g: food.kcal * 100 / food.grams,
+            proteinPer100g: food.proteinGrams * 100 / food.grams,
+            carbsPer100g: food.carbGrams * 100 / food.grams,
+            fatPer100g: food.fatGrams * 100 / food.grams,
+          }),
+        })),
       });
 
       clearPendingFoodAnalysis();
       router.replace({ pathname: '/(tabs)/diary', params: { saved: '1' } });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'No fue posible guardar la comida.');
     } finally {
       setIsSaving(false);
     }
@@ -331,10 +343,11 @@ export default function ReviewMealScreen() {
           <PrimaryButton
             label="Guardar en el diario"
             loading={isSaving}
-            disabled={foods.length === 0}
+            disabled={foods.length === 0 || foods.some((food) => food.grams <= 0)}
             onPress={handleSave}
             style={{ marginTop: Spacing.four }}
           />
+          {saveError && <ThemedText style={{ color: '#ef4444', marginTop: Spacing.two }}>{saveError}</ThemedText>}
 
           <OutlineButton
             label="Volver a tomar la foto"

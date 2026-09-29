@@ -3,7 +3,8 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { addLocalMeal } from '@/api/localDiaryStore';
+import { api } from '@/api';
+import { toLocalDateKey } from '@/api/weightDate';
 import { getFoodByBarcode, type BarcodeFood } from '@/api/realClient';
 import type { Meal } from '@/api/types';
 import { AppScreen } from '@/components/app-screen';
@@ -21,6 +22,7 @@ export default function BarcodeScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [product, setProduct] = useState<BarcodeFood | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [grams, setGrams] = useState('100');
   const [mealType, setMealType] = useState<Meal['type']>('snack');
@@ -61,24 +63,23 @@ export default function BarcodeScanScreen() {
     scanLocked.current = false;
   }
 
-  function saveMeal() {
+  async function saveMeal() {
     if (!product || !totals) return;
-
-    addLocalMeal({
-      id: Date.now().toString(),
-      type: mealType,
-      time: new Intl.DateTimeFormat('es-CL', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date()),
-      calories: totals.calories,
-      description: `${product.name} (${portion} g)`,
-      proteinGrams: totals.protein,
-      carbGrams: totals.carbs,
-      fatGrams: totals.fat,
-    });
-
-    router.replace({ pathname: '/(tabs)/diary', params: { saved: '1' } });
+    setSaving(true);
+    setError('');
+    try {
+      await api.createMeal({
+        recordedOn: toLocalDateKey(),
+        mealType,
+        source: 'barcode',
+        items: [{ barcode: product.barcode, grams: portion }],
+      });
+      router.replace({ pathname: '/(tabs)/diary', params: { saved: '1' } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar la comida.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!permission?.granted) {
@@ -266,6 +267,7 @@ export default function BarcodeScanScreen() {
           <PrimaryButton
             label="Agregar al diario"
             disabled={!totals}
+            loading={saving}
             onPress={saveMeal}
             style={{ marginTop: Spacing.four }}
           />
