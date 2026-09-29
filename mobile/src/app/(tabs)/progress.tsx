@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { Trash2 } from 'lucide-react-native';
+
 import { Card } from '@/components/ui/Card';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
@@ -10,17 +12,31 @@ import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 import { api } from '@/api';
-import { WeightEntry } from '@/api/types';
+import { UserProfile, WeightEntry } from '@/api/types';
+import {
+  getLocalWeightEntries,
+  removeLocalWeightEntry,
+  subscribeToLocalWeightEntries,
+  weightDateSortValue,
+} from '@/api/localWeightStore';
+import { WeightChart } from '@/components/ui/WeightChart';
 
 export default function ProgressScreen() {
   const theme = useTheme();
-  const [history, setHistory] = useState<WeightEntry[] | null>(null);
+  const [mockHistory, setMockHistory] = useState<WeightEntry[] | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [localEntries, setLocalEntries] = useState(() => getLocalWeightEntries());
 
   useEffect(() => {
-    api.getWeightHistory().then(setHistory);
+    api.getWeightHistory().then(setMockHistory);
+    api.getUserProfile().then(setProfile);
   }, []);
 
-  if (!history) {
+  useEffect(() => {
+    return subscribeToLocalWeightEntries(() => setLocalEntries(getLocalWeightEntries()));
+  }, []);
+
+  if (!mockHistory || !profile) {
     return (
       <AppScreen>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -30,36 +46,89 @@ export default function ProgressScreen() {
     );
   }
 
-  const change = (history[history.length - 1].weightKg - history[0].weightKg).toFixed(1);
+  // Combina el historial de ejemplo con lo registrado localmente, ordenado
+  // cronológicamente con el mismo formato de fecha ("día mes-abreviado").
+  const combinedHistory = [...mockHistory, ...localEntries].sort(
+    (a, b) => weightDateSortValue(a.date) - weightDateSortValue(b.date),
+  );
+
+  const currentWeight = combinedHistory[combinedHistory.length - 1]?.weightKg ?? profile.currentWeightKg;
+  const firstWeight = combinedHistory[0]?.weightKg ?? currentWeight;
+  const totalChange = (currentWeight - firstWeight).toFixed(1);
+  const recentEntries = [...combinedHistory].reverse().slice(0, 5);
+
+  const isLocalEntry = (date: string) => localEntries.some((entry) => entry.date === date);
 
   return (
     <AppScreen scroll>
       <BrandMark compact />
 
-      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>Tu semana</ThemedText>
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>Seguimiento del peso</ThemedText>
       <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
-        Tu historial empieza a mostrar una visión más completa.
+        Observa tu evolución a lo largo del tiempo.
       </ThemedText>
 
+      <View style={{ flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.four }}>
+        <Card style={{ flex: 1, alignItems: 'center' }}>
+          <ThemedText type="small" themeColor="textSecondary">Peso actual</ThemedText>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>{currentWeight} kg</ThemedText>
+        </Card>
+
+        <Card style={{ flex: 1, alignItems: 'center' }}>
+          <ThemedText type="small" themeColor="textSecondary">Cambio total</ThemedText>
+          <ThemedText
+            type="smallBold"
+            style={{ marginTop: Spacing.one, color: Number(totalChange) <= 0 ? theme.accent : theme.text }}
+          >
+            {Number(totalChange) > 0 ? '+' : ''}{totalChange} kg
+          </ThemedText>
+        </Card>
+
+        <Card style={{ flex: 1, alignItems: 'center' }}>
+          <ThemedText type="small" themeColor="textSecondary">Objetivo</ThemedText>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>{profile.goalWeightKg} kg</ThemedText>
+        </Card>
+      </View>
+
       <Card style={{ marginTop: Spacing.four }}>
-        <ThemedText type="smallBold">Cambio de peso</ThemedText>
-        <ThemedText themeColor="accent" type="title" style={{ fontSize: 28, marginTop: Spacing.one }}>
-          {change} kg
-        </ThemedText>
+        <ThemedText type="smallBold">Evolución</ThemedText>
+        <View style={{ marginTop: Spacing.three }}>
+          <WeightChart entries={combinedHistory} />
+        </View>
       </Card>
 
-      {/* El gráfico de barras + línea de la imagen 11 queda pendiente:
-          requiere una librería de gráficos (ej. victory-native) */}
+      <ThemedText type="smallBold" style={{ marginTop: Spacing.four }}>Registros recientes</ThemedText>
+
+      {recentEntries.map((entry) => (
+        <Card
+          key={entry.date}
+          style={{ marginTop: Spacing.two, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          <View>
+            <ThemedText type="small" themeColor="textSecondary" style={{ textTransform: 'capitalize' }}>
+              {entry.date}
+            </ThemedText>
+            <ThemedText type="smallBold">{entry.weightKg} kg</ThemedText>
+          </View>
+
+          {isLocalEntry(entry.date) && (
+            <TouchableOpacity onPress={() => removeLocalWeightEntry(entry.date)} hitSlop={8}>
+              <Trash2 color="#ef4444" size={18} />
+            </TouchableOpacity>
+          )}
+        </Card>
+      ))}
 
       <PrimaryButton
-        label="📷 Registrar comida"
-        onPress={() => router.push('/camera')}
-        style={{ marginTop: Spacing.four }}
+        label="⚖️ Registrar peso"
+        onPress={() => router.push('/log-weight')}
+        style={{ marginTop: Spacing.five }}
       />
 
       <OutlineButton
-        label="⚖️ Registrar peso"
+        label="📷 Registrar comida"
         tone="accent"
+        onPress={() => router.push('/camera')}
         style={{ marginTop: Spacing.two }}
       />
     </AppScreen>
