@@ -1,4 +1,4 @@
-import { DailySummary, WeightEntry, UserProfile, FoodCatalogItem } from './types';
+import { DailySummary, FoodCatalogItem } from './types';
 
 export const mockDailySummary: DailySummary = {
   date: '20 de agosto',
@@ -9,23 +9,6 @@ export const mockDailySummary: DailySummary = {
     { id: '1', type: 'desayuno', time: '08:15', calories: 420, description: 'Avena, leche y plátano' },
     { id: '2', type: 'almuerzo', time: '13:40', calories: 830, description: 'Arroz, pechuga de pollo y palta' },
   ],
-};
-
-export const mockWeightHistory: WeightEntry[] = [
-  { date: '24 jul', weightKg: 77.0 },
-  { date: '31 jul', weightKg: 76.6 },
-  { date: '7 ago', weightKg: 76.2 },
-  { date: '14 ago', weightKg: 75.8 },
-  { date: '20 ago', weightKg: 75.8 },
-];
-
-export const mockUserProfile: UserProfile = {
-  name: 'Anthon',
-  email: 'anthon@example.com',
-  age: 24,
-  heightCm: 175,
-  currentWeightKg: 75.8,
-  goalWeightKg: 72.0,
 };
 
 export const mockFoodCatalog: FoodCatalogItem[] = [

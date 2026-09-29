@@ -26,17 +26,9 @@ export interface DailySummary {
 }
 
 export interface WeightEntry {
-  date: string;
+  id: number;
+  recordedOn: string;
   weightKg: number;
-}
-
-export interface UserProfile {
-  name: string;
-  email: string;
-  age: number;
-  heightCm: number;
-  currentWeightKg: number;
-  goalWeightKg: number;
 }
 
 export interface AuthCredentials {

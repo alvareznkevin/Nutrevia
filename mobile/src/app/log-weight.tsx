@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 
-import { addLocalWeightEntry } from '@/api/localWeightStore';
+import { api } from '@/api';
+import { toLocalDateKey } from '@/api/weightDate';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
 import { Card } from '@/components/ui/Card';
@@ -16,16 +17,24 @@ export default function LogWeightScreen() {
 
   const [weight, setWeight] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const parsedWeight = Number(weight.replace(',', '.'));
-  const isValid = Number.isFinite(parsedWeight) && parsedWeight > 0;
+  const isValid = Number.isFinite(parsedWeight) && parsedWeight >= 20 && parsedWeight <= 400;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isValid) return;
 
     setIsSaving(true);
-    addLocalWeightEntry(parsedWeight);
-    router.replace('/(tabs)/progress');
+    setErrorMessage(null);
+    try {
+      await api.saveWeightEntry(toLocalDateKey(), parsedWeight);
+      router.replace('/(tabs)/progress');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'No fue posible guardar el peso.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -57,6 +66,12 @@ export default function LogWeightScreen() {
         />
         <ThemedText themeColor="textSecondary">kg</ThemedText>
       </Card>
+
+      {errorMessage && (
+        <ThemedText style={{ color: '#ef4444', marginTop: Spacing.two }}>
+          {errorMessage}
+        </ThemedText>
+      )}
 
       <PrimaryButton
         label="Guardar peso"

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   GoogleSignin,
 } from '@react-native-google-signin/google-signin';
@@ -46,7 +46,7 @@ export default function ProfileScreen() {
     useState(false);
 
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setErrorMessage(null);
 
     try {
@@ -59,12 +59,12 @@ export default function ProfileScreen() {
           : 'No fue posible cargar el perfil.',
       );
     }
-  };
-
-
-  useEffect(() => {
-    void loadProfile();
   }, []);
+
+
+  useFocusEffect(useCallback(() => {
+    void loadProfile();
+  }, [loadProfile]));
 
 
   const handleLogout = async () => {

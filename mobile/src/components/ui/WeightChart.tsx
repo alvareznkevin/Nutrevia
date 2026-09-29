@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { WeightEntry } from '@/api/types';
+import { formatWeightDate } from '@/api/weightDate';
 import { useTheme } from '@/hooks/use-theme';
 
 interface WeightChartProps {
@@ -53,12 +54,12 @@ export function WeightChart({ entries, height = 160 }: WeightChartProps) {
 
         <Polyline points={polylinePoints} fill="none" stroke={theme.accent} strokeWidth={2} />
 
-        {points.map((point, index) => (
-          <Circle key={index} cx={point.x} cy={point.y} r={3} fill={theme.accent} />
+        {points.map((point) => (
+          <Circle key={point.entry.id} cx={point.x} cy={point.y} r={3} fill={theme.accent} />
         ))}
 
         {points.map((point, index) => (
-          index === 0 || index === points.length - 1 ? (
+          index === 0 || (points.length > 1 && index === points.length - 1) ? (
             <SvgText
               key={`label-${index}`}
               x={point.x}
@@ -67,7 +68,7 @@ export function WeightChart({ entries, height = 160 }: WeightChartProps) {
               fill={theme.textSecondary}
               textAnchor={index === 0 ? 'start' : 'end'}
             >
-              {point.entry.date}
+              {formatWeightDate(point.entry.recordedOn)}
             </SvgText>
           ) : null
         ))}

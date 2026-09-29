@@ -12,6 +12,7 @@ import {
   NutritionGoalResult,
   ProfileInput,
   ProfileResult,
+  WeightEntry,
 } from './types';
 
 import {
@@ -58,6 +59,12 @@ interface BackendNutritionGoal {
   protein_grams: number;
   carbohydrate_grams: number;
   fat_grams: number;
+}
+
+interface BackendWeightEntry {
+  id: number;
+  recorded_on: string;
+  weight_kg: number;
 }
 
 
@@ -138,6 +145,14 @@ function mapNutritionGoal(
     proteinGrams: goal.protein_grams,
     carbohydrateGrams: goal.carbohydrate_grams,
     fatGrams: goal.fat_grams,
+  };
+}
+
+function mapWeightEntry(entry: BackendWeightEntry): WeightEntry {
+  return {
+    id: entry.id,
+    recordedOn: entry.recorded_on,
+    weightKg: entry.weight_kg,
   };
 }
 
@@ -344,16 +359,17 @@ export async function getProfile(): Promise<ProfileResult> {
 
 
 export async function getAccountProfile(): Promise<AccountProfile> {
-  const [user, profile] = await Promise.all([
+  const [user, profile, weights] = await Promise.all([
     getCurrentUser(),
     getProfile(),
+    getWeightHistory(),
   ]);
 
   return {
     email: user.email,
     age: profile.age,
     heightCm: profile.heightCm,
-    currentWeightKg: profile.currentWeightKg,
+    currentWeightKg: weights.at(-1)?.weightKg ?? profile.currentWeightKg,
     activityLevel: profile.activityLevel,
     calculationSex: profile.calculationSex,
   };
@@ -420,6 +436,75 @@ export async function getNutritionGoal(): Promise<NutritionGoalResult> {
     await response.json();
 
   return mapNutritionGoal(result);
+}
+
+export async function getWeightHistory(): Promise<WeightEntry[]> {
+  const token = await getAccessToken();
+
+  if (!token) {
+    throw new Error('Debes iniciar sesión nuevamente.');
+  }
+
+  const response = await fetch(`${getApiUrl()}/weights`, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response));
+  }
+
+  const entries: BackendWeightEntry[] = await response.json();
+  return entries.map(mapWeightEntry);
+}
+
+export async function saveWeightEntry(
+  recordedOn: string,
+  weightKg: number,
+): Promise<WeightEntry> {
+  const token = await getAccessToken();
+
+  if (!token) {
+    throw new Error('Debes iniciar sesión nuevamente.');
+  }
+
+  const response = await fetch(`${getApiUrl()}/weights`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ recorded_on: recordedOn, weight_kg: weightKg }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response));
+  }
+
+  const entry: BackendWeightEntry = await response.json();
+  return mapWeightEntry(entry);
+}
+
+export async function deleteWeightEntry(entryId: number): Promise<void> {
+  const token = await getAccessToken();
+
+  if (!token) {
+    throw new Error('Debes iniciar sesión nuevamente.');
+  }
+
+  const response = await fetch(`${getApiUrl()}/weights/${entryId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response));
+  }
 }
 
 

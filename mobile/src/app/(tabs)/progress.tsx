@@ -1,136 +1,149 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
-import { router } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, TouchableOpacity, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-
-import { Card } from '@/components/ui/Card';
+import { api } from '@/api';
+import { formatWeightDate } from '@/api/weightDate';
+import { GoalType, ProfileResult, WeightEntry } from '@/api/types';
 import { AppScreen } from '@/components/app-screen';
 import { BrandMark } from '@/components/brand-mark';
+import { Card } from '@/components/ui/Card';
 import { OutlineButton } from '@/components/ui/OutlineButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { ThemedText } from '@/components/themed-text';
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
-import { api } from '@/api';
-import { UserProfile, WeightEntry } from '@/api/types';
-import {
-  getLocalWeightEntries,
-  removeLocalWeightEntry,
-  subscribeToLocalWeightEntries,
-  weightDateSortValue,
-} from '@/api/localWeightStore';
 import { WeightChart } from '@/components/ui/WeightChart';
+import { ThemedText } from '@/components/themed-text';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+
+const goalLabels: Record<GoalType, string> = { lose: 'Bajar', maintain: 'Mantener', gain: 'Subir' };
 
 export default function ProgressScreen() {
   const theme = useTheme();
-  const [mockHistory, setMockHistory] = useState<WeightEntry[] | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [localEntries, setLocalEntries] = useState(() => getLocalWeightEntries());
+  const [history, setHistory] = useState<WeightEntry[] | null>(null);
+  const [profile, setProfile] = useState<ProfileResult | null>(null);
+  const [goalType, setGoalType] = useState<GoalType | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    api.getWeightHistory().then(setMockHistory);
-    api.getUserProfile().then(setProfile);
+  const loadProgress = useCallback(async () => {
+    setErrorMessage(null);
+    try {
+      const [entries, userProfile, goal] = await Promise.all([
+        api.getWeightHistory(), api.getProfile(), api.getNutritionGoal(),
+      ]);
+      setHistory(entries.sort((a, b) => a.recordedOn.localeCompare(b.recordedOn)));
+      setProfile(userProfile);
+      setGoalType(goal.goalType);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'No fue posible cargar el progreso.');
+    }
   }, []);
 
-  useEffect(() => {
-    return subscribeToLocalWeightEntries(() => setLocalEntries(getLocalWeightEntries()));
-  }, []);
+  useFocusEffect(useCallback(() => { void loadProgress(); }, [loadProgress]));
 
-  if (!mockHistory || !profile) {
+  const deleteEntry = async (entry: WeightEntry) => {
+    setDeletingId(entry.id);
+    setErrorMessage(null);
+    try {
+      await api.deleteWeightEntry(entry.id);
+      await loadProgress();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'No fue posible eliminar el registro.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const confirmDelete = (entry: WeightEntry) => {
+    Alert.alert('Eliminar registro', `¿Eliminar el peso del ${formatWeightDate(entry.recordedOn)}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: () => void deleteEntry(entry) },
+    ]);
+  };
+
+  if (!history || !profile || !goalType) {
     return (
       <AppScreen>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={theme.accent} />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.three }}>
+          {errorMessage ? (
+            <>
+              <ThemedText>{errorMessage}</ThemedText>
+              <OutlineButton label="Reintentar" onPress={() => void loadProgress()} />
+            </>
+          ) : <ActivityIndicator color={theme.accent} />}
         </View>
       </AppScreen>
     );
   }
 
-  // Combina el historial de ejemplo con lo registrado localmente, ordenado
-  // cronológicamente con el mismo formato de fecha ("día mes-abreviado").
-  const combinedHistory = [...mockHistory, ...localEntries].sort(
-    (a, b) => weightDateSortValue(a.date) - weightDateSortValue(b.date),
-  );
-
-  const currentWeight = combinedHistory[combinedHistory.length - 1]?.weightKg ?? profile.currentWeightKg;
-  const firstWeight = combinedHistory[0]?.weightKg ?? currentWeight;
-  const totalChange = (currentWeight - firstWeight).toFixed(1);
-  const recentEntries = [...combinedHistory].reverse().slice(0, 5);
-
-  const isLocalEntry = (date: string) => localEntries.some((entry) => entry.date === date);
+  const currentWeight = history[history.length - 1]?.weightKg ?? profile.currentWeightKg;
+  const totalChange = currentWeight - profile.currentWeightKg;
+  const recentEntries = [...history].reverse();
 
   return (
     <AppScreen scroll>
       <BrandMark compact />
-
       <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>Seguimiento del peso</ThemedText>
       <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
         Observa tu evolución a lo largo del tiempo.
       </ThemedText>
+      {errorMessage && <ThemedText style={{ color: '#ef4444', marginTop: Spacing.two }}>{errorMessage}</ThemedText>}
 
       <View style={{ flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.four }}>
         <Card style={{ flex: 1, alignItems: 'center' }}>
           <ThemedText type="small" themeColor="textSecondary">Peso actual</ThemedText>
           <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>{currentWeight} kg</ThemedText>
         </Card>
-
         <Card style={{ flex: 1, alignItems: 'center' }}>
           <ThemedText type="small" themeColor="textSecondary">Cambio total</ThemedText>
-          <ThemedText
-            type="smallBold"
-            style={{ marginTop: Spacing.one, color: Number(totalChange) <= 0 ? theme.accent : theme.text }}
-          >
-            {Number(totalChange) > 0 ? '+' : ''}{totalChange} kg
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one, color: totalChange <= 0 ? theme.accent : theme.text }}>
+            {totalChange > 0 ? '+' : ''}{totalChange.toFixed(1)} kg
           </ThemedText>
         </Card>
-
         <Card style={{ flex: 1, alignItems: 'center' }}>
           <ThemedText type="small" themeColor="textSecondary">Objetivo</ThemedText>
-          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>{profile.goalWeightKg} kg</ThemedText>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>{goalLabels[goalType]}</ThemedText>
         </Card>
       </View>
 
       <Card style={{ marginTop: Spacing.four }}>
         <ThemedText type="smallBold">Evolución</ThemedText>
         <View style={{ marginTop: Spacing.three }}>
-          <WeightChart entries={combinedHistory} />
+          {history.length > 0 ? <WeightChart entries={history} /> : (
+            <ThemedText type="small" themeColor="textSecondary">
+              Tu gráfico aparecerá cuando registres tu primer peso.
+            </ThemedText>
+          )}
         </View>
       </Card>
 
       <ThemedText type="smallBold" style={{ marginTop: Spacing.four }}>Registros recientes</ThemedText>
-
+      {recentEntries.length === 0 && (
+        <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.two }}>
+          Aún no hay pesos registrados.
+        </ThemedText>
+      )}
       {recentEntries.map((entry) => (
-        <Card
-          key={entry.date}
-          style={{ marginTop: Spacing.two, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-        >
+        <Card key={entry.id} style={{ marginTop: Spacing.two, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
             <ThemedText type="small" themeColor="textSecondary" style={{ textTransform: 'capitalize' }}>
-              {entry.date}
+              {formatWeightDate(entry.recordedOn)}
             </ThemedText>
             <ThemedText type="smallBold">{entry.weightKg} kg</ThemedText>
           </View>
-
-          {isLocalEntry(entry.date) && (
-            <TouchableOpacity onPress={() => removeLocalWeightEntry(entry.date)} hitSlop={8}>
-              <Trash2 color="#ef4444" size={18} />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={() => confirmDelete(entry)}
+            disabled={deletingId !== null}
+            accessibilityLabel={`Eliminar peso del ${formatWeightDate(entry.recordedOn)}`}
+            hitSlop={8}
+          >
+            {deletingId === entry.id ? <ActivityIndicator color={theme.accent} /> : <Trash2 color="#ef4444" size={18} />}
+          </TouchableOpacity>
         </Card>
       ))}
 
-      <PrimaryButton
-        label="⚖️ Registrar peso"
-        onPress={() => router.push('/log-weight')}
-        style={{ marginTop: Spacing.five }}
-      />
-
-      <OutlineButton
-        label="📷 Registrar comida"
-        tone="accent"
-        onPress={() => router.push('/camera')}
-        style={{ marginTop: Spacing.two }}
-      />
+      <PrimaryButton label="⚖️ Registrar peso" onPress={() => router.push('/log-weight')} style={{ marginTop: Spacing.five }} />
+      <OutlineButton label="📷 Registrar comida" tone="accent" onPress={() => router.push('/camera')} style={{ marginTop: Spacing.two }} />
     </AppScreen>
   );
 }
