@@ -19,6 +19,11 @@ import {
   subscribeToLocalWeightEntries,
   weightDateSortValue,
 } from '@/api/localWeightStore';
+import {
+  getMostRecentWellbeingEntry,
+  subscribeToLocalWellbeingEntries,
+  WellbeingEntry,
+} from '@/api/localWellbeingStore';
 import { WeightChart } from '@/components/ui/WeightChart';
 
 export default function ProgressScreen() {
@@ -26,6 +31,7 @@ export default function ProgressScreen() {
   const [mockHistory, setMockHistory] = useState<WeightEntry[] | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [localEntries, setLocalEntries] = useState(() => getLocalWeightEntries());
+  const [latestWellbeing, setLatestWellbeing] = useState<WellbeingEntry | null>(() => getMostRecentWellbeingEntry());
 
   useEffect(() => {
     api.getWeightHistory().then(setMockHistory);
@@ -34,6 +40,10 @@ export default function ProgressScreen() {
 
   useEffect(() => {
     return subscribeToLocalWeightEntries(() => setLocalEntries(getLocalWeightEntries()));
+  }, []);
+
+  useEffect(() => {
+    return subscribeToLocalWellbeingEntries(() => setLatestWellbeing(getMostRecentWellbeingEntry()));
   }, []);
 
   if (!mockHistory || !profile) {
@@ -119,12 +129,52 @@ export default function ProgressScreen() {
         </Card>
       ))}
 
+      {latestWellbeing && (
+        <>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.four }}>Bienestar</ThemedText>
+
+          <Card style={{ marginTop: Spacing.two }}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Último registro — {latestWellbeing.date}
+            </ThemedText>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.two }}>
+              <View>
+                <ThemedText type="small" themeColor="textSecondary">Sueño</ThemedText>
+                <ThemedText type="smallBold">
+                  {latestWellbeing.sleepHours !== undefined ? `${latestWellbeing.sleepHours} h` : '—'}
+                </ThemedText>
+              </View>
+              <View>
+                <ThemedText type="small" themeColor="textSecondary">Estrés</ThemedText>
+                <ThemedText type="smallBold">
+                  {latestWellbeing.stressLevel !== undefined ? `${latestWellbeing.stressLevel}/5` : '—'}
+                </ThemedText>
+              </View>
+              <View>
+                <ThemedText type="small" themeColor="textSecondary">Fatiga</ThemedText>
+                <ThemedText type="smallBold">
+                  {latestWellbeing.fatigueLevel !== undefined ? `${latestWellbeing.fatigueLevel}/5` : '—'}
+                </ThemedText>
+              </View>
+            </View>
+          </Card>
+        </>
+      )}
+
       <PrimaryButton
         label="⚖️ Registrar peso"
         onPress={() => router.push('/log-weight')}
         style={{ marginTop: Spacing.five }}
       />
 
+      <OutlineButton
+        label="📝 Registrar bienestar"
+        tone="accent"
+        onPress={() => router.push('/log-wellbeing')}
+        style={{ marginTop: Spacing.two }}
+      />
+      
       <OutlineButton
         label="📷 Registrar comida"
         tone="accent"
