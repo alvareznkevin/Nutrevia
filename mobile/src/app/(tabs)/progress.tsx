@@ -12,7 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 import { api } from '@/api';
-import { UserProfile, WeightEntry } from '@/api/types';
+import { DailySummary, UserProfile, WeightEntry } from '@/api/types';
 import {
   getLocalWeightEntries,
   removeLocalWeightEntry,
@@ -24,29 +24,63 @@ import {
   subscribeToLocalWellbeingEntries,
   WellbeingEntry,
 } from '@/api/localWellbeingStore';
+import { subscribeToLocalMeals } from '@/api/localDiaryStore';
+import { getWeeklyStats } from '@/api/weeklySummary';
 import { WeightChart } from '@/components/ui/WeightChart';
+import { WeeklyBarChart } from '@/components/ui/WeeklyBarChart';
+
+function getAnalysisMessage(weightChange: number | null, daysWithRegistry: number) {
+  const confidence = daysWithRegistry >= 5 ? 'alta' : daysWithRegistry >= 3 ? 'media' : 'baja';
+
+  if (weightChange === null) {
+    return {
+      message: 'Registra tu peso en más de un día de esta semana para ver un análisis de tendencia.',
+      confidence: 'baja' as const,
+    };
+  }
+
+  if (weightChange < 0) {
+    return { message: 'Vas en una dirección estable: tu peso muestra una leve baja esta semana.', confidence };
+  }
+
+  if (weightChange > 0) {
+    return { message: 'Tu peso subió levemente esta semana — revisa tu registro si no era tu objetivo.', confidence };
+  }
+
+  return { message: 'Tu peso se mantuvo estable esta semana.', confidence };
+}
 
 export default function ProgressScreen() {
   const theme = useTheme();
   const [mockHistory, setMockHistory] = useState<WeightEntry[] | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [dailySummary, setDailySummary] = useState<DailySummary | null>(null);
   const [localEntries, setLocalEntries] = useState(() => getLocalWeightEntries());
   const [latestWellbeing, setLatestWellbeing] = useState<WellbeingEntry | null>(() => getMostRecentWellbeingEntry());
+  const [weeklyStats, setWeeklyStats] = useState(() => getWeeklyStats());
 
   useEffect(() => {
     api.getWeightHistory().then(setMockHistory);
     api.getUserProfile().then(setProfile);
+    api.getDailySummary().then(setDailySummary);
   }, []);
 
   useEffect(() => {
-    return subscribeToLocalWeightEntries(() => setLocalEntries(getLocalWeightEntries()));
+    return subscribeToLocalWeightEntries(() => {
+      setLocalEntries(getLocalWeightEntries());
+      setWeeklyStats(getWeeklyStats());
+    });
   }, []);
 
   useEffect(() => {
     return subscribeToLocalWellbeingEntries(() => setLatestWellbeing(getMostRecentWellbeingEntry()));
   }, []);
 
-  if (!mockHistory || !profile) {
+  useEffect(() => {
+    return subscribeToLocalMeals(() => setWeeklyStats(getWeeklyStats()));
+  }, []);
+
+  if (!mockHistory || !profile || !dailySummary) {
     return (
       <AppScreen>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -56,8 +90,6 @@ export default function ProgressScreen() {
     );
   }
 
-  // Combina el historial de ejemplo con lo registrado localmente, ordenado
-  // cronológicamente con el mismo formato de fecha ("día mes-abreviado").
   const combinedHistory = [...mockHistory, ...localEntries].sort(
     (a, b) => weightDateSortValue(a.date) - weightDateSortValue(b.date),
   );
@@ -69,11 +101,97 @@ export default function ProgressScreen() {
 
   const isLocalEntry = (date: string) => localEntries.some((entry) => entry.date === date);
 
+  const analysis = getAnalysisMessage(weeklyStats.weightChange, weeklyStats.daysWithRegistry);
+
   return (
     <AppScreen scroll>
       <BrandMark compact />
 
-      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>Seguimiento del peso</ThemedText>
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.four }}>Tu semana</ThemedText>
+      <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
+        {weeklyStats.daysWithRegistry > 0
+          ? 'Tu historial empieza a mostrar una visión más completa.'
+          : 'Registra algo esta semana para ver tu resumen.'}
+      </ThemedText>
+
+      <Card style={{ marginTop: Spacing.four }}>
+        <ThemedText type="smallBold">Constancia de registro</ThemedText>
+        <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
+          {weeklyStats.daysWithRegistry} de 7 días
+        </ThemedText>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.three }}>
+          {weeklyStats.days.map((day, index) => (
+            <View key={index} style={{ alignItems: 'center' }}>
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: day.hasRegistry ? theme.accent : 'transparent',
+                  borderWidth: day.hasRegistry ? 0 : 1,
+                  borderColor: theme.border,
+                }}
+              >
+                <ThemedText type="small" style={{ color: day.hasRegistry ? '#000' : theme.textSecondary }}>
+                  {day.shortLabel}
+                </ThemedText>
+              </View>
+            </View>
+          ))}
+        </View>
+      </Card>
+
+      <View style={{ flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.three }}>
+        <Card style={{ flex: 1, alignItems: 'center' }}>
+          <ThemedText type="small" themeColor="textSecondary">Promedio diario</ThemedText>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>{weeklyStats.avgCalories} kcal</ThemedText>
+        </Card>
+
+        <Card style={{ flex: 1, alignItems: 'center' }}>
+          <ThemedText type="small" themeColor="textSecondary">Proteína</ThemedText>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>
+            {weeklyStats.avgProtein} / {dailySummary.goal.protein} g
+          </ThemedText>
+        </Card>
+
+        <Card style={{ flex: 1, alignItems: 'center' }}>
+          <ThemedText type="small" themeColor="textSecondary">Cambio de peso</ThemedText>
+          <ThemedText type="smallBold" style={{ marginTop: Spacing.one }}>
+            {weeklyStats.weightChange !== null ? `${weeklyStats.weightChange} kg` : '—'}
+          </ThemedText>
+        </Card>
+      </View>
+
+      <Card style={{ marginTop: Spacing.three }}>
+        <ThemedText type="smallBold">Alimentación y peso</ThemedText>
+        <View style={{ marginTop: Spacing.three }}>
+          <WeeklyBarChart
+            values={weeklyStats.days.map((day) => day.calories)}
+            labels={weeklyStats.days.map((day) => day.shortLabel)}
+            goal={dailySummary.goal.calories}
+          />
+        </View>
+      </Card>
+
+      <Card
+        style={{
+          marginTop: Spacing.three,
+          backgroundColor: theme.backgroundElement,
+          borderWidth: 1,
+          borderColor: theme.accent,
+        }}
+      >
+        <ThemedText type="smallBold" themeColor="accent">Análisis automático</ThemedText>
+        <ThemedText type="small" style={{ marginTop: Spacing.one }}>{analysis.message}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.one }}>
+          Confianza {analysis.confidence}
+        </ThemedText>
+      </Card>
+
+      <ThemedText type="subtitle" style={{ marginTop: Spacing.six }}>Seguimiento del peso</ThemedText>
       <ThemedText themeColor="accent" type="small" style={{ marginTop: Spacing.one }}>
         Observa tu evolución a lo largo del tiempo.
       </ThemedText>
@@ -163,22 +281,22 @@ export default function ProgressScreen() {
       )}
 
       <PrimaryButton
-        label="⚖️ Registrar peso"
-        onPress={() => router.push('/log-weight')}
+        label="📷 Registrar comida"
+        onPress={() => router.push('/camera')}
         style={{ marginTop: Spacing.five }}
+      />
+
+      <OutlineButton
+        label="⚖️ Registrar peso"
+        tone="accent"
+        onPress={() => router.push('/log-weight')}
+        style={{ marginTop: Spacing.two }}
       />
 
       <OutlineButton
         label="📝 Registrar bienestar"
         tone="accent"
         onPress={() => router.push('/log-wellbeing')}
-        style={{ marginTop: Spacing.two }}
-      />
-      
-      <OutlineButton
-        label="📷 Registrar comida"
-        tone="accent"
-        onPress={() => router.push('/camera')}
         style={{ marginTop: Spacing.two }}
       />
     </AppScreen>
